@@ -51,15 +51,21 @@ converges after at most two recompilations.  The package works with
   \par\smallskip
 }
 \section{Overview}
-Teachers, exam setters, and technical writers regularly prepare documents
+The package was originally created to support automatic generation of quizzes
+and exams for academic activities, where multiple-choice questions needed to
+be arranged legibly without wasting precious page space. Teachers, exam
+setters, and technical writers regularly prepare documents
 containing lists of short items.  When those lists are laid out in several
 columns the page count drops, yet manually balancing the content soon becomes
-tedious.  The \textsf{columnspread} package automates this balancing act:
+tedious.
+
+The \textsf{columnspread} package automates this balancing act:
 for every registered list environment it remembers how many columns were
 required without breaking an item, and it restores that configuration on the
-next run.  Column counts are persisted via the auxiliary file, so the workflow
-mirrors that of cross references---compile twice after significant edits and
-the layout stabilises.
+next run. Column counts are persisted via the auxiliary file, so the workflow
+mirrors that of cross references -- compile twice after significant edits and
+the layout stabilises while preserving readability and selecting an optimal
+column count.
 \section{Package interface}
 \subsection{Loading the package}
 The package can be loaded directly:
@@ -93,32 +99,28 @@ like any other list registered with \textsf{columnspread}.
 Wrap one or several compatible list environments inside the
 \DescribeEnv{columnspread} environment.  The first optional argument sets the
 maximum number of columns; the default is~\texttt{5}.
+
+\clearpage
+
+\noindent With shorter items, more columns may fit:
+
 \begin{verbatim}
 \begin{columnspread}[5]
-  \begin{itemize}
-    \item Alpha
-    \item Beta
-    \item Gamma
-  \end{itemize}
+\begin{itemize}
+  \item Alpha
+  \item Beta
+  \item Gamma
+  \item Delta
+  \item Epsilon
+  \item Zeta
+  \item Eta
+  \item Theta
+  \item Iota
+  \item Kappa
+\end{itemize}
 \end{columnspread}
 \end{verbatim}
 
-%\begin{columnspreaddemo}
-\begin{columnspread}[5]
-\begin{itemize}
-  \item Odin Allfather
-  \item Thor Thunderer
-  \item Loki Trickster
-  \item Freyja Vanir Goddess
-  \item Tyr God of War
-  \item Baldr Shining One
-  \item Heimdall Watchman
-  \item Njord Sea Deity
-  \item Skadi Winter Huntress
-  \item Hel Ruler of the Dead
-\end{itemize}
-\end{columnspread}
-%\end{columnspreaddemo}
 \begin{columnspreaddemo}
 \begin{columnspread}[5]
 \begin{itemize}
@@ -135,16 +137,8 @@ maximum number of columns; the default is~\texttt{5}.
 \end{itemize}
 \end{columnspread}
 \end{columnspreaddemo}
-\begin{columnspreaddemo}
-\begin{columnspread}[5]
-  \begin{itemize}
-    \item Alpha
-    \item Beta
-    \item Gamma
-  \end{itemize}
-\end{columnspread}
-\end{columnspreaddemo}
-A second optional argument acts as a key.  Lists sharing the same key also
+
+\noindent A second optional argument acts as a key. Lists sharing the same key also
 share their column history:
 \begin{verbatim}
 \begin{columnspread}[4][Planets]
@@ -168,6 +162,7 @@ share their column history:
   \end{choices}
 \end{columnspread}
 \end{columnspreaddemo}
+
 When no key is supplied the package generates a unique identifier of the
 form \verb|auto-<number>|.  The columns are increased gradually up to the
 configured maximum when all items fit, and reduced (and locked) whenever an
@@ -185,7 +180,7 @@ packages such as \pkg{enumitem}.
     warns, but lets the document compile in case the author is satisfied with
     the result.
   \item \textbf{Verbatim content.} Environments that alter paragraph building
-    heavily---\texttt{verbatim}, \pkg{minted}, \pkg{listings}---may confuse
+    heavily -- \texttt{verbatim}, \pkg{minted}, \pkg{listings} -- may confuse
     the heuristic that detects broken items.  Where possible, move them
     outside the \env{columnspread} block.
 \end{itemize}
@@ -193,7 +188,7 @@ packages such as \pkg{enumitem}.
 The following examples mirror the demo document distributed with the package.
 They may be copied verbatim into a document after
 \verb|\usepackage[defaults=exam]{columnspread}|.
-\subsection*{Itemize}
+\subsection{Itemize}
 \begin{verbatim}
 \begin{columnspread}[5]
 \begin{itemize}
@@ -210,22 +205,7 @@ They may be copied verbatim into a document after
 \end{itemize}
 \end{columnspread}
 \end{verbatim}
-\begin{columnspreaddemo}
-\begin{columnspread}[5]
-\begin{itemize}
-  \item Odin Allfather
-  \item Thor Thunderer
-  \item Loki Trickster
-  \item Freyja Vanir Goddess
-  \item Tyr God of War
-  \item Baldr Shining One
-  \item Heimdall Watchman
-  \item Njord Sea Deity
-  \item Skadi Winter Huntress
-  \item Hel Ruler of the Dead
-\end{itemize}
-\end{columnspread}
-\end{columnspreaddemo}
+
 \begin{columnspreaddemo}
 \begin{columnspread}[5]
 \begin{itemize}
@@ -242,6 +222,7 @@ They may be copied verbatim into a document after
 \end{itemize}
 \end{columnspread}
 \end{columnspreaddemo}
+
 \begin{verbatim}
 \begin{columnspread}[5]
 \begin{itemize}
@@ -258,10 +239,159 @@ They may be copied verbatim into a document after
 \end{itemize}
 \end{columnspread}
 \end{verbatim}
-\subsection*{Enumerate}
+
+\begin{columnspreaddemo}
+\begin{columnspread}[5]
+\begin{itemize}
+  \item Odin Allfather
+  \item Thor Thunderer
+  \item Loki Trickster
+  \item Freyja Vanir Goddess
+  \item Tyr God of War
+  \item Baldr Shining One
+  \item Heimdall Watchman
+  \item Njord Sea Deity
+  \item Skadi Winter Huntress
+  \item Hel Ruler of the Dead
+\end{itemize}
+\end{columnspread}
+\end{columnspreaddemo}
+
+\subsection{Enumerate}
 Replace the \env{itemize} environment with \env{enumerate} to balance numbered
 lists.  The column adjustment works the same as in the previous example.
-\subsection*{Exam checkboxes}
+
+\begin{verbatim}
+\begin{columnspread}[5]
+\begin{enumerate}
+  \item Alpha
+  \item Beta
+  \item Gamma
+  \item Delta
+  \item Epsilon
+  \item Zeta
+  \item Eta
+  \item Theta
+  \item Iota
+  \item Kappa
+\end{enumerate}
+\end{columnspread}
+\end{verbatim}
+
+\begin{columnspreaddemo}
+\begin{columnspread}[5]
+\begin{enumerate}
+  \item Alpha
+  \item Beta
+  \item Gamma
+  \item Delta
+  \item Epsilon
+  \item Zeta
+  \item Eta
+  \item Theta
+  \item Iota
+  \item Kappa
+\end{enumerate}
+\end{columnspread}
+\end{columnspreaddemo}
+
+\begin{verbatim}
+\begin{columnspread}[5]
+\begin{enumerate}
+  \item Odin Allfather
+  \item Thor Thunderer
+  \item Loki Trickster
+  \item Freyja Vanir Goddess
+  \item Tyr God of War
+  \item Baldr Shining One
+  \item Heimdall Watchman
+  \item Njord Sea Deity
+  \item Skadi Winter Huntress
+  \item Hel Ruler of the Dead
+\end{enumerate}
+\end{columnspread}
+\end{verbatim}
+
+\begin{columnspreaddemo}
+\begin{columnspread}[5]
+\begin{enumerate}
+  \item Odin Allfather
+  \item Thor Thunderer
+  \item Loki Trickster
+  \item Freyja Vanir Goddess
+  \item Tyr God of War
+  \item Baldr Shining One
+  \item Heimdall Watchman
+  \item Njord Sea Deity
+  \item Skadi Winter Huntress
+  \item Hel Ruler of the Dead
+\end{enumerate}
+\end{columnspread}
+\end{columnspreaddemo}
+
+\subsection{Descriptions}
+
+Description lists are also supported:
+
+\begin{verbatim}
+\begin{columnspread}[3]
+\begin{description}
+  \item[Apple] A sweet red fruit.
+  \item[Banana] A long yellow fruit.
+  \item[Cherry] A small red fruit.
+  \item[Date] A sweet brown fruit.
+  \item[Elderberry] A small dark fruit.
+  \item[Fig] A pear-shaped fruit.
+  \item[Grape] A small round fruit.
+  \item[Honeydew] A sweet green melon.
+\end{description}
+\end{columnspread}
+\end{verbatim}
+\begin{columnspreaddemo}
+\begin{columnspread}[3]
+\begin{description}
+  \item[Apple] A sweet red fruit.
+  \item[Banana] A long yellow fruit.
+  \item[Cherry] A small red fruit.
+  \item[Date] A sweet brown fruit.
+  \item[Elderberry] A small dark fruit.
+  \item[Fig] A pear-shaped fruit.
+  \item[Grape] A small round fruit.
+  \item[Honeydew] A sweet green melon.
+\end{description}
+\end{columnspread}
+\end{columnspreaddemo}
+
+Obviously, longer descriptions may trigger column breaks and therefore the case to have no columns at all may arise:
+
+\begin{verbatim}
+\begin{columnspread}[3]
+\begin{description}
+  \item[Linus Torvalds] ...
+  \item[Dennis Ritchie] ...
+\end{description}
+\end{columnspread}
+\end{verbatim}
+\begin{columnspreaddemo}
+\begin{columnspread}[3]
+\begin{description}
+  \item[Linus Torvalds] Torvalds was born in Helsinki, Finland, on 28 December 1969,
+  the son of journalists Anna and Nils Torvalds, the grandson of statistician Leo Törnqvist and of poet Ole Torvalds,
+  and the great-grandson of journalist and soldier Toivo Karanko. His parents were campus radicals at the University
+  of Helsinki in the 1960s. His family belongs to the Swedish-speaking minority in Finland.
+  He was named after Linus Pauling, the Nobel Prize-winning American chemist, although in the
+  book Rebel Code: Linux and the Open Source Revolution, he is quoted as saying,
+  "I think I was named equally for Linus the Peanuts cartoon character", noting that
+  this made him "half Nobel Prize-winning chemist and half blanket-carrying cartoon character"
+  \item[Dennis Ritchie] Dennis Ritchie was born in Bronxville, New York. His father was Alistair E. Ritchie,
+  a longtime Bell Labs scientist and co-author of The Design of Switching Circuits on switching circuit theory.
+  As a child, Dennis moved with his family to Summit, New Jersey, where he graduated from Summit High School.
+  He graduated from Harvard University with degrees in physics and applied mathematics in 1963.
+\end{description}
+\end{columnspread}
+\end{columnspreaddemo}
+
+\subsection{Exam checkboxes}
 \begin{verbatim}
 \begin{questions}
 \question Which animal is known as the ``King of the Jungle''?
@@ -300,7 +430,7 @@ lists.  The column adjustment works the same as in the previous example.
 \end{columnspread}
 \end{questions}
 \end{columnspreaddemo}
-\subsection*{Shared keys}
+\subsection{Shared keys}
 \begin{verbatim}
 \begin{columnspread}[4][Q1]
 \begin{choices}
@@ -341,49 +471,22 @@ lists.  The column adjustment works the same as in the previous example.
 \end{choices}
 \end{columnspread}
 \end{columnspreaddemo}
-% Warning demo (optional for end users)
+
+Warning demo (optional for end users)
 \begin{verbatim}
-% \begin{columnspread}[2]
-% \begin{itemize}
-%   \item This item wraps a figure float to trigger the warning.
-%     \begin{figure}[h]
-%       \centering
-%       \rule{2cm}{2cm}
-%       \caption{Float inside columnspread (demo)}
-%     \end{figure}
-% \end{itemize}
-% \end{columnspread}
-\end{verbatim}
-\subsection*{Descriptions}
-\begin{verbatim}
-\begin{columnspread}[3]
-\begin{description}
-  \item[Apple] A sweet red fruit.
-  \item[Banana] A long yellow fruit.
-  \item[Cherry] A small red fruit.
-  \item[Date] A sweet brown fruit.
-  \item[Elderberry] A small dark fruit.
-  \item[Fig] A pear-shaped fruit.
-  \item[Grape] A small round fruit.
-  \item[Honeydew] A sweet green melon.
-\end{description}
+\begin{columnspread}[2]
+\begin{itemize}
+  \item This item wraps a figure float to trigger the warning.
+    \begin{figure}[h]
+      \centering
+      \rule{2cm}{2cm}
+      \caption{Float inside columnspread (demo)}
+    \end{figure}
+\end{itemize}
 \end{columnspread}
 \end{verbatim}
-\begin{columnspreaddemo}
-\begin{columnspread}[3]
-\begin{description}
-  \item[Apple] A sweet red fruit.
-  \item[Banana] A long yellow fruit.
-  \item[Cherry] A small red fruit.
-  \item[Date] A sweet brown fruit.
-  \item[Elderberry] A small dark fruit.
-  \item[Fig] A pear-shaped fruit.
-  \item[Grape] A small round fruit.
-  \item[Honeydew] A sweet green melon.
-\end{description}
-\end{columnspread}
-\end{columnspreaddemo}
-\subsection*{tcolorbox integration}
+
+\subsection{TcolorBox integration}
 \begin{verbatim}
 \begin{columnspread}[5]
 \begin{tcbitemize}[size=fbox]
@@ -411,6 +514,9 @@ lists.  The column adjustment works the same as in the previous example.
 \end{columnspread}
 \end{columnspreaddemo}
 \StopEventually{\PrintChanges\PrintIndex}
+
+\clearpage
+
 \section{Implementation}
 The implementation closely follows the exploratory code that powered the
 original demo document.
@@ -418,9 +524,6 @@ original demo document.
 \end{document}
 %</driver>
 % \fi
-%
-%
-%
 %<*package>
 %    \begin{macrocode}
 \NeedsTeXFormat{LaTeX2e}[2020-10-01]
