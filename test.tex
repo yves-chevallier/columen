@@ -2,6 +2,7 @@
 
 \usepackage{multicol}
 \usepackage{xparse}
+\usepackage{etoolbox}
 
 \makeatletter
 \newif\ifWI@pending
@@ -19,6 +20,19 @@
 \WI@listcounter=0\relax
 
 \newcommand\WI@defaultmaxcols{5}
+
+\newif\ifWI@columnspread
+\newif\ifWI@columnspreadstar
+\newif\ifWI@columnspreadhaskey
+\newcount\WI@columnspreaddepth
+\newcount\WI@columnspreadlistcount
+\WI@columnspreadfalse
+\WI@columnspreadstarfalse
+\WI@columnspreadhaskeyfalse
+\WI@columnspreaddepth=0\relax
+\WI@columnspreadlistcount=0\relax
+\newcommand\WI@columnspreadcols{\WI@defaultmaxcols}
+\newcommand\WI@columnspreadkey{}
 
 \newcommand\WI@getcols[1]{%
   \@ifundefined{WI@cols@#1}{1}{\csname WI@cols@#1\endcsname}%
@@ -269,26 +283,125 @@
     \end{warnmulticol*}%
   }
 
+\newcommand\WI@columnspread@begin[2]{%
+  \ifWI@columnspread
+    \PackageError{warnitemize}{Nested columnspread environments are unsupported}{%
+      Close the surrounding columnspread environment before starting another.%
+    }%
+  \fi
+  \WI@columnspreadtrue
+  \WI@columnspreaddepth=0\relax
+  \WI@columnspreadlistcount=0\relax
+  \def\WI@columnspreadcols{#1}%
+  \IfNoValueTF{#2}{%
+    \WI@columnspreadhaskeyfalse
+  }{%
+    \WI@columnspreadhaskeytrue
+    \def\WI@columnspreadkey{#2}%
+  }%
+}
+
+\newcommand\WI@columnspread@end{%
+  \ifWI@columnspread
+    \ifnum\WI@columnspreaddepth>0\relax
+      \WI@endcolumns
+      \WI@deactivate
+    \fi
+    \WI@columnspreadfalse
+    \WI@columnspreadstarfalse
+    \WI@columnspreadhaskeyfalse
+    \WI@columnspreaddepth=0\relax
+    \WI@columnspreadlistcount=0\relax
+  \fi
+}
+
+\newcommand\WI@columnspread@before{%
+  \ifWI@columnspread
+    \advance\WI@columnspreaddepth\@ne
+    \ifnum\WI@columnspreaddepth=\@ne
+      \advance\WI@columnspreadlistcount\@ne
+      \ifWI@columnspreadhaskey
+        \protected@edef\WI@currentkey{\WI@columnspreadkey-\the\WI@columnspreadlistcount}%
+      \else
+        \WI@generatekey
+      \fi
+      \ifWI@columnspreadstar
+        \WI@startrue
+      \else
+        \WI@starfalse
+      \fi
+      \WI@activate
+      \WI@startcolumns{\WI@columnspreadcols}%
+    \fi
+  \fi
+}
+
+\newcommand\WI@columnspread@after{%
+  \ifWI@columnspread
+    \ifnum\WI@columnspreaddepth>0\relax
+      \ifnum\WI@columnspreaddepth=\@ne
+        \WI@endcolumns
+        \WI@deactivate
+      \fi
+      \advance\WI@columnspreaddepth\m@ne
+    \fi
+  \fi
+}
+
+\newcommand\WI@columnspread@patch[1]{%
+  \BeforeBeginEnvironment{#1}{\WI@columnspread@before}%
+  \AfterEndEnvironment{#1}{\WI@columnspread@after}%
+}
+
+\newcommand\WI@columnspread@maybe[1]{%
+  \@ifundefined{#1}{}{%
+    \WI@columnspread@patch{#1}%
+  }%
+}
+
+\NewDocumentEnvironment{columnspread}{O{\WI@defaultmaxcols} o}
+  {%
+    \WI@columnspreadstarfalse
+    \WI@columnspread@begin{#1}{#2}%
+  }
+  {\WI@columnspread@end}
+
+\NewDocumentEnvironment{columnspread*}{O{\WI@defaultmaxcols} o}
+  {%
+    \WI@columnspreadstartrue
+    \WI@columnspread@begin{#1}{#2}%
+  }
+  {\WI@columnspread@end}
+
+\WI@columnspread@maybe{itemize}
+\WI@columnspread@maybe{enumerate}
+\WI@columnspread@maybe{checkboxes}
+
 \makeatother
 
 \begin{document}
 
-\section*{warnmulticolitemize demo}
+\section{Automatic Spread Items Across Columns}
 
-\subsection*{Break detection locks columns}
-\begin{warnmulticolitemize}[5]
-  \item Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur vel
-lectus at elit imperdiet laoreet. Aliquam eget mi sit amet lacus varius facilisis.
-Pellentesque pharetra mauris non dolor vehicula molestie eu non dolor.
-Duis ligula est, convallis eget nibh a, tincidunt semper velit. Sed commodo
-euismod orci ac vulputate. Nam tempor arcu ex.
-  \item Second item short.
-  \item Third item \\ with forced line break.
-\end{warnmulticolitemize}
+This demo shows how to automatically spread items across multiple columns,
+in order to save space. If an item breaks across a page or column boundary,
+the number of columns is reduced and the document must be recompiled to see
+the effect.
 
-\subsection*{Automatic widening to five columns}
+The goal is to make this demo work with most itemize-like environments, including:
+
+- itemize
+- enumerate
+- exam checkboxes
+
+\section{Examples}
+
+\subsection{Itemize}
+
+With fairly short items, we can fit in more columns:
+
 \begin{warnmulticolitemize}[5]
-  \item Alpha Bravo Chocolat violet
+  \item Alpha
   \item Beta
   \item Gamma
   \item Delta
@@ -300,50 +413,51 @@ euismod orci ac vulputate. Nam tempor arcu ex.
   \item Kappa
 \end{warnmulticolitemize}
 
-\subsection*{Wrapping enumerate}
-\begin{warnmulticol}[4]
-  \begin{enumerate}
-    \item First option
-    \item Second option
-    \item Third option
-    \item Fourth option
-    \item Fifth option
-  \end{enumerate}
-\end{warnmulticol}
+With longer items, fewer columns are used to avoid breaking items:
 
-\subsection*{Exam checkboxes}
-\begin{warnmulticol}[4]
-  \begin{checkboxes}
-    \choice Option alpha
-    \choice Option beta
-    \choice Option gamma
-    \choice Option delta
-    \choice Option epsilon
-    \choice Option zeta
-    \choice Option eta
-    \choice Option beta
-    \choice Option gamma
-    \choice Option delta
-    \choice Option epsilon
-    \choice Option zeta
-    \choice Option eta
-  \end{checkboxes}
-\end{warnmulticol}
+\begin{warnmulticolitemize}[5]
+    \item Odin Allfather
+    \item Thor Thunderer
+    \item Loki Trickster
+    \item Freyja Vanir Goddess
+    \item Tyr God of War
+    \item Baldr Shining One
+    \item Heimdall Watchman
+    \item Njord Sea Deity
+    \item Skadi Winter Huntress
+    \item Hel Ruler of the Dead
+\end{warnmulticolitemize}
 
-\subsection*{Starred variant without balancing}
-\begin{warnmulticolitemize*}[5]
-  \item One
-  \item Two
-  \item Three
-  \item Four
-  \item Five
-  \item Six
-  \item Seven
-  \item Eight
-  \item Nine
-  \item Ten
-  \item Eleven
-  \item Twelve
-\end{warnmulticolitemize*}
+The goals would be to keep using the standard itemize environment, and to use etoolbox-like patching to monkey-patch the logic into it.
+
+\begin{columnspread}[5]
+\begin{itemize}
+  \item Alpha
+  \item Beta
+  \item Gamma
+  \item Delta
+  \item Epsilon
+  \item Zeta
+  \item Eta
+  \item Theta
+  \item Iota
+  \item Kappa
+\end{itemize}
+\end{columnspread}
+
+\begin{columnspread}[5]
+\begin{itemize}
+    \item Odin Allfather
+    \item Thor Thunderer
+    \item Loki Trickster
+    \item Freyja Vanir Goddess
+    \item Tyr God of War
+    \item Baldr Shining One
+    \item Heimdall Watchman
+    \item Njord Sea Deity
+    \item Skadi Winter Huntress
+    \item Hel Ruler of the Dead
+\end{itemize}
+\end{columnspread}
 
 \end{document}
