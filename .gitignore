@@ -12,3 +12,5 @@
 *.vrb
 *.blg
 test.pdf
+build/
+*.pdf

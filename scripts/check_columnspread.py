@@ -4,11 +4,11 @@
 Usage:
     python3 scripts/check_columnspread.py
 
-The script recompiles ``test.tex`` repeatedly so the aux-driven column allocation
-logic converges, then inspects ``test.aux`` to confirm the computed column
-counts for each list match the expected demonstration values. It also verifies
-that the preset CSV registered for ``defaults=exam`` expands to the expected
-environment list.
+The script recompiles ``test.tex`` repeatedly so the aux-driven column
+allocation logic converges, then inspects ``test.aux`` to confirm the computed
+column counts for each list match the expected demonstration values. It also
+verifies that the preset CSV registered for ``defaults=exam`` expands to the
+expected environment list.
 """
 
 from __future__ import annotations
@@ -22,7 +22,9 @@ from typing import Iterable
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 TEX_FILE = ROOT / "test.tex"
-EXPECTED_COLUMNS = [5, 3, 5, 3, 5, 3, 5]
+STY_FILE = ROOT / "columnspread.sty"
+INS_FILE = ROOT / "columnspread.ins"
+EXPECTED_COLUMNS = [5, 3, 5, 3, 5, 3, 2]
 EXAM_PRESET_ENVIRONMENTS = [
     "itemize",
     "enumerate",
@@ -36,7 +38,7 @@ EXAM_PRESET_ENVIRONMENTS = [
 ]
 
 
-def run_pdflatex(source: pathlib.Path = TEX_FILE) -> None:
+def run_pdflatex(source: pathlib.Path) -> None:
     """Compile the TeX source three times so aux data stabilises."""
     for _ in range(3):
         subprocess.run(
@@ -50,24 +52,47 @@ def run_pdflatex(source: pathlib.Path = TEX_FILE) -> None:
 
 def read_columns(aux_path: pathlib.Path) -> list[int]:
     """Parse the aux file and collect the column counts per list."""
-    data = aux_path.read_text(encoding="utf8")
-    pattern = re.compile(r"\\WI@definecols\{auto-(\d+)\}\{(\d+)\}")
     columns: dict[int, int] = {}
-    for match in pattern.finditer(data):
-        idx = int(match.group(1))
-        columns[idx] = int(match.group(2))
+    prefix = "\\WI@definecols{auto-"
+    for line in aux_path.read_text(encoding="utf8").splitlines():
+        if not line.startswith(prefix):
+            continue
+        try:
+            idx_end = line.index("}", len(prefix))
+            idx = int(line[len(prefix):idx_end])
+            val_start = line.rfind("{") + 1
+            val = int(line[val_start:-1])
+        except (ValueError, IndexError):
+            continue
+        columns[idx] = val
     return [columns[i] for i in sorted(columns)]
+
+
+def ensure_style_file() -> None:
+    """Ensure columnspread.sty exists by running docstrip if needed."""
+    if STY_FILE.exists():
+        return
+    if not INS_FILE.exists():
+        raise RuntimeError("Missing columnspread.ins; cannot generate columnspread.sty")
+    subprocess.run(
+        ["pdflatex", INS_FILE.name],
+        cwd=ROOT,
+        check=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
 
 def parse_preset_csv(name: str) -> list[str]:
     """Extract the CSV registered via \\@namedef{columnspread@preset@<name>}."""
-    tex_source = TEX_FILE.read_text(encoding="utf8")
+    ensure_style_file()
+    sty_source = STY_FILE.read_text(encoding="utf8")
     pattern = re.compile(
         rf"\\@namedef\{{columnspread@preset@{re.escape(name)}\}}\{{([^}}]*)\}}"
     )
-    match = pattern.search(tex_source)
+    match = pattern.search(sty_source)
     if not match:
-        raise RuntimeError(f"Preset '{name}' not found in {TEX_FILE}")
+        raise RuntimeError(f"Preset '{name}' not found in {STY_FILE}")
     csv = match.group(1)
     return [item.strip() for item in csv.split(",") if item.strip()]
 
@@ -97,7 +122,7 @@ def main() -> int:
         print(f"  observed: {preset_envs}", file=sys.stderr)
         return 1
 
-    run_pdflatex()
+    run_pdflatex(TEX_FILE)
     observed_columns = read_columns(ROOT / "test.aux")
     try:
         assert_columns(EXPECTED_COLUMNS, observed_columns, "Column count")

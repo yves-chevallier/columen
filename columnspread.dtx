@@ -1,0 +1,506 @@
+% \iffalse
+%<*driver>
+\ProvidesFile{columnspread.dtx}[2024/06/13 v0.1 Column spread package source]
+\documentclass{ltxdoc}
+\EnableCrossrefs
+\CodelineIndex
+\RecordChanges
+\begin{document}
+  \DocInput{columnspread.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \GetFileInfo{columnspread.sty}
+%
+% \title{The \textsf{columnspread} package}
+% \author{Converted from the original \texttt{test.tex} demo}
+% \date{\filedate\ \fileversion}
+%
+% \maketitle
+%
+% \begin{abstract}
+% The \textsf{columnspread} package automatically spreads items from list
+% environments across multiple columns while keeping whole items in a single
+% column.  Column counts are stored in the \texttt{.aux} file, so the document
+% converges after at most two recompilations.  The package works with
+% \texttt{itemize}, \texttt{enumerate}, classes derived from the
+% \textsf{exam} bundle (choices, checkboxes, \ldots) and integrates with
+% \textsf{tcolorbox}'s \texttt{tcbitemize}.
+% \end{abstract}
+%
+% \tableofcontents
+%
+% \section{Usage}
+%
+% Load the package with either the default configuration or a preset:
+%
+% \begin{verbatim}
+% \usepackage{columnspread}
+% % or
+% \usepackage[defaults=exam]{columnspread}
+% \end{verbatim}
+%
+% The \cs{columnspreadfor} macro accepts a comma separated list of environment
+% names and enables automatic column spreading for each of them.  If more
+% control is needed, \cs{ColumnSpreadPatch} patches a single environment.
+%
+% Wrap the lists that should be balanced inside the \texttt{columnspread}
+% environment and give the desired maximum number of columns as an optional
+% argument:
+%
+% \begin{verbatim}
+% \begin{columnspread}[5]
+%   \begin{itemize}
+%     \item ...
+%   \end{itemize}
+% \end{columnspread}
+% \end{verbatim}
+%
+% An optional second argument acts as a persistent key, allowing multiple lists
+% to share the same column history:
+%
+% \begin{verbatim}
+% \begin{columnspread}[4][Q1]
+%   \begin{choices} ... \end{choices}
+%   \begin{choices} ... \end{choices}
+% \end{columnspread}
+% \end{verbatim}
+%
+% Only the outermost list inside \texttt{columnspread} is balanced; nested
+% lists stay single column.  Floats and verbatim-like content inside the list
+% items are discouraged---floats trigger a package warning and may still upset
+% the layout.  If the column counts oscillate between runs, clear the auxiliary
+% files and recompile twice.
+%
+% \StopEventually{\PrintChanges\PrintIndex}
+%
+% \section{Implementation}
+%
+% The implementation closely follows the exploratory code that powered the
+% original demo document.
+%
+%<*package>
+%    \begin{macrocode}
+%<*package>
+\NeedsTeXFormat{LaTeX2e}[2020-10-01]
+\ProvidesPackage{columnspread}[2024/06/13 v0.1 Automatically balance list columns]
+\RequirePackage{xparse}
+\RequirePackage{multicol}
+\RequirePackage{etoolbox}
+
+\newcommand\columnspread@pendingpreset{}
+\DeclareOption{defaults=exam}{\gdef\columnspread@pendingpreset{exam}}
+\DeclareOption*{%
+  \PackageWarning{columnspread}{Unknown option '\CurrentOption'}%
+}
+\ProcessOptions\relax
+
+\@namedef{columnspread@preset@exam}{itemize,enumerate,description,choices,checkboxes,oneparchoices,oneparcheckboxes,parts,subparts}
+
+\makeatletter
+
+\newif\ifWI@pending
+\newif\ifWI@broke
+\newif\ifWI@rerun
+\newif\ifWI@usemulticols
+\newif\ifWI@locked
+\newif\ifWI@star
+\WI@rerunfalse
+
+\newcount\WI@columncount
+\newcount\WI@nextcolumns
+\newcount\WI@maxcolumns
+\newcount\WI@listcounter
+\WI@listcounter=0\relax
+
+\newcommand\WI@defaultmaxcols{5}
+
+\newif\ifWI@columnspread
+\newif\ifWI@columnspreadstar
+\newif\ifWI@columnspreadhaskey
+\newcount\WI@columnspreaddepth
+\newcount\WI@columnspreadlistcount
+\WI@columnspreadfalse
+\WI@columnspreadstarfalse
+\WI@columnspreadhaskeyfalse
+\WI@columnspreaddepth=0\relax
+\WI@columnspreadlistcount=0\relax
+\newcommand\WI@columnspreadcols{\WI@defaultmaxcols}
+\newcommand\WI@columnspreadkey{}
+
+\newif\ifWI@usetcbitemize
+\newif\ifWI@hadtcbcolumns
+\newif\ifWI@tcbitemfirst
+\WI@usetcbitemizefalse
+\WI@hadtcbcolumnsfalse
+\WI@tcbitemfirsttrue
+\let\WI@oldtcbcolumns\relax
+\newbox\WI@tcb@box
+\newdimen\WI@tcb@baseline
+\newdimen\WI@tcb@height
+\newdimen\WI@tcb@diff
+
+\newcommand\WI@getcols[1]{%
+  \@ifundefined{WI@cols@#1}{1}{\csname WI@cols@#1\endcsname}%
+}
+
+\newcommand\WI@definecols[2]{%
+  \expandafter\gdef\csname WI@cols@#1\endcsname{#2}%
+}
+
+\newcommand\WI@writecols[2]{%
+  \begingroup
+    \edef\WI@tempa{\string\WI@definecols{#1}{#2}}%
+    \protected@write\@auxout{}{\WI@tempa}%
+  \endgroup
+}
+
+\newcommand\WI@getlock[1]{%
+  \@ifundefined{WI@lock@#1}{0}{\csname WI@lock@#1\endcsname}%
+}
+
+\newcommand\WI@definelock[2]{%
+  \expandafter\gdef\csname WI@lock@#1\endcsname{#2}%
+}
+
+\newcommand\WI@writelock[2]{%
+  \begingroup
+    \edef\WI@tempb{\string\WI@definelock{#1}{#2}}%
+    \protected@write\@auxout{}{\WI@tempb}%
+  \endgroup
+}
+
+\newcommand\WI@generatekey{%
+  \global\advance\WI@listcounter\@ne
+  \edef\WI@currentkey{auto-\the\WI@listcounter}%
+}
+
+\newif\ifWI@active
+\WI@activefalse
+
+\newcommand\WI@maybeWarn@[1]{%
+  \ifnum#1>1
+    \global\WI@broketrue
+    \PackageWarning{columnspread}{A list item broke across #1 lines}%
+  \fi
+  \WI@pendingfalse
+}
+
+\newcommand\WI@floatwarn[1]{%
+  \ifWI@active
+    \PackageWarning{columnspread}{Floating environments inside columnspread items are unsupported; move the float outside}%
+  \fi
+}
+\pretocmd{\@float}{\WI@floatwarn{#1}}{}{}
+\pretocmd{\@dblfloat}{\WI@floatwarn{#1}}{}{}
+
+\newcommand\WI@checkpending{%
+  \ifWI@active
+    \ifWI@pending
+      \expandafter\WI@maybeWarn@\expandafter{\the\prevgraf}%
+    \fi
+  \fi
+}
+
+\newcommand\WI@armpending{%
+  \ifWI@active
+    \WI@pendingtrue
+  \fi
+}
+
+\AddToHook{para/after}{\WI@checkpending}
+\AddToHook{cmd/item/before}{\WI@armpending}
+
+\AtEndDocument{%
+  \ifWI@rerun
+    \PackageWarningNoLine{columnspread}{List columns expanded; rerun LaTeX}%
+  \fi
+}
+
+\newcommand\WI@startcolumns[1]{%
+    \global\WI@activetrue
+    \global\WI@brokefalse
+    \WI@pendingfalse
+    \WI@hadtcbcolumnsfalse
+    \WI@maxcolumns=#1\relax
+    \ifnum\WI@maxcolumns<1 \WI@maxcolumns=1\fi
+    \WI@lockedfalse
+    \WI@usemulticolstrue
+    \ifWI@star
+      \WI@columncount=\WI@maxcolumns
+    \else
+      \WI@columncount=\WI@getcols{\WI@currentkey}\relax
+      \ifnum\WI@columncount<1 \WI@columncount=1\fi
+      \ifnum\WI@columncount>\WI@maxcolumns
+        \WI@columncount=\WI@maxcolumns
+      \fi
+      \ifnum\WI@getlock{\WI@currentkey}>0\relax
+        \WI@lockedtrue
+      \fi
+    \fi
+    \ifWI@usetcbitemize
+      \WI@usemulticolsfalse
+      \WI@hadtcbcolumnstrue
+      \let\WI@oldtcbcolumns\kvtcb@raster@columns
+      \edef\kvtcb@raster@columns{\the\WI@columncount}%
+    \else
+      \ifnum\WI@columncount=1
+        \WI@usemulticolsfalse
+      \fi
+    \fi
+    \ifnum\WI@columncount=1
+      \WI@usemulticolsfalse
+    \fi
+    \ifWI@usemulticols
+      \ifWI@star
+        \begin{multicols*}{\the\WI@columncount}%
+      \else
+        \begin{multicols}{\the\WI@columncount}%
+      \fi
+    \fi
+}
+
+\newcommand\WI@endcolumns{%
+    \WI@checkpending
+    \ifWI@usemulticols
+      \ifWI@star
+        \end{multicols*}%
+      \else
+        \end{multicols}%
+      \fi
+    \fi
+    \ifWI@star
+      % starred variant is manual; keep requested column count
+    \else
+      \WI@nextcolumns=\WI@columncount
+      \ifWI@broke
+        \ifnum\WI@columncount>1
+          \advance\WI@nextcolumns\m@ne
+          \WI@lockedtrue
+        \fi
+      \else
+        \ifWI@locked
+          % keep current column count
+        \else
+          \ifnum\WI@nextcolumns<\WI@maxcolumns
+            \advance\WI@nextcolumns\@ne
+            \global\WI@reruntrue
+          \fi
+        \fi
+      \fi
+      \ifnum\WI@nextcolumns<1 \WI@nextcolumns=1\fi
+      \WI@writecols{\WI@currentkey}{\the\WI@nextcolumns}%
+      \ifWI@locked
+        \WI@writelock{\WI@currentkey}{1}%
+      \else
+        \WI@writelock{\WI@currentkey}{0}%
+      \fi
+    \fi
+    \ifWI@usetcbitemize
+      \ifWI@hadtcbcolumns
+        \let\kvtcb@raster@columns\WI@oldtcbcolumns
+        \WI@hadtcbcolumnsfalse
+      \fi
+    \fi
+    \WI@starfalse
+    \global\WI@activefalse
+}
+
+\newcommand\WI@columnspread@begin[2]{%
+  \ifWI@columnspread
+    \PackageError{columnspread}{Nested columnspread environments are unsupported}{%
+      Close the surrounding columnspread environment before starting another.%
+    }%
+  \fi
+  \WI@columnspreadtrue
+  \WI@columnspreaddepth=0\relax
+  \WI@columnspreadlistcount=0\relax
+  \def\WI@columnspreadcols{#1}%
+  \IfNoValueTF{#2}{%
+    \WI@columnspreadhaskeyfalse
+  }{%
+    \WI@columnspreadhaskeytrue
+    \def\WI@columnspreadkey{#2}%
+  }%
+}
+
+\newcommand\WI@columnspread@end{%
+  \ifWI@columnspread
+    \ifnum\WI@columnspreaddepth>0\relax
+      \WI@endcolumns
+    \fi
+    \WI@columnspreadfalse
+    \WI@columnspreadstarfalse
+    \WI@columnspreadhaskeyfalse
+    \WI@columnspreaddepth=0\relax
+    \WI@columnspreadlistcount=0\relax
+  \fi
+}
+
+\newcommand\WI@columnspread@before{%
+  \ifWI@columnspread
+    \advance\WI@columnspreaddepth\@ne
+    \ifnum\WI@columnspreaddepth=\@ne
+      \advance\WI@columnspreadlistcount\@ne
+      \ifWI@columnspreadhaskey
+        \protected@edef\WI@currentkey{\WI@columnspreadkey-\the\WI@columnspreadlistcount}%
+      \else
+        \WI@generatekey
+      \fi
+      \ifWI@columnspreadstar
+        \WI@startrue
+      \else
+        \WI@starfalse
+      \fi
+      \WI@startcolumns{\WI@columnspreadcols}%
+    \fi
+  \fi
+}
+
+\newcommand\WI@columnspread@after{%
+  \ifWI@columnspread
+    \ifnum\WI@columnspreaddepth>0\relax
+      \ifnum\WI@columnspreaddepth=\@ne
+        \WI@endcolumns
+      \fi
+      \advance\WI@columnspreaddepth\m@ne
+    \fi
+  \fi
+}
+
+\newcommand\WI@columnspread@patch[1]{%
+  \BeforeBeginEnvironment{#1}{\WI@columnspread@before}%
+  \AfterEndEnvironment{#1}{\WI@columnspread@after}%
+}
+
+\newcommand\WI@columnspread@maybe[1]{%
+  \@ifundefined{#1}{}{%
+    \WI@columnspread@patch{#1}%
+  }%
+}
+
+\NewDocumentCommand{\ColumnSpreadPatch}{m}{%
+  \WI@columnspread@patch{#1}%
+}
+
+\NewDocumentCommand{\columnspreadfor}{m}{%
+  \forcsvlist{\WI@columnspread@maybe}{#1}%
+}
+
+\newcommand\columnspread@applypreset[1]{%
+  \edef\columnspread@optiondefaults{#1}%
+  \@ifundefined{columnspread@preset@\columnspread@optiondefaults}{%
+    \PackageWarning{columnspread}{Unknown defaults preset '#1'; ignoring}%
+  }{%
+    \columnspreadfor{\csname columnspread@preset@\columnspread@optiondefaults\endcsname}%
+  }%
+}
+
+\AtBeginDocument{%
+  \ifx\columnspread@pendingpreset\@empty
+  \else
+    \columnspread@applypreset{\columnspread@pendingpreset}%
+  \fi
+}
+
+\NewDocumentEnvironment{columnspread}{O{\WI@defaultmaxcols} o}
+  {%
+    \WI@columnspreadstarfalse
+    \WI@columnspread@begin{#1}{#2}%
+  }
+  {\WI@columnspread@end}
+
+\NewDocumentEnvironment{columnspread*}{O{\WI@defaultmaxcols} o}
+  {%
+    \WI@columnspreadstartrue
+    \WI@columnspread@begin{#1}{#2}%
+  }
+  {\WI@columnspread@end}
+
+\WI@columnspread@maybe{itemize}
+\WI@columnspread@maybe{enumerate}
+\WI@columnspread@maybe{checkboxes}
+\WI@columnspread@maybe{description}
+
+\newcommand\WI@tcbitem@prepare{%
+  \ifWI@usetcbitemize
+    \WI@pendingtrue
+    \global\WI@tcbitemfirstfalse
+  \fi
+}
+
+\newcommand\WI@tcbitem@finalize{%
+  \ifWI@usetcbitemize
+    \ifWI@tcbitemfirst
+      % nothing yet
+    \else
+      \ifvmode
+        \setbox\WI@tcb@box=\lastbox
+        \ifvoid\WI@tcb@box
+          % nothing to measure
+        \else
+          \WI@tcb@height=\ht\WI@tcb@box
+          \advance\WI@tcb@height\dp\WI@tcb@box
+          \ifdim\WI@tcb@baseline=0pt
+            \WI@tcb@baseline=\WI@tcb@height
+          \else
+            \ifdim\WI@tcb@height<\WI@tcb@baseline
+              \WI@tcb@baseline=\WI@tcb@height
+            \fi
+          \fi
+          \WI@tcb@diff=\WI@tcb@height
+          \advance\WI@tcb@diff-\WI@tcb@baseline
+          \ifdim\WI@tcb@diff>\baselineskip
+            \WI@maybeWarn@{2}%
+          \else
+            \WI@maybeWarn@{1}%
+          \fi
+          \box\WI@tcb@box
+        \fi
+      \fi
+    \fi
+  \fi
+}
+
+\newcommand\columnspread@setuptcb{%
+  \BeforeBeginEnvironment{tcbitemize}{%
+    \ifWI@columnspread
+      \WI@usetcbitemizetrue
+      \WI@columnspread@before
+      \WI@tcbitemfirsttrue
+      \WI@tcb@baseline=0pt
+    \else
+      \WI@usetcbitemizefalse
+    \fi
+  }%
+  \AfterEndEnvironment{tcbitemize}{%
+    \ifWI@usetcbitemize
+      \WI@tcbitem@finalize
+      \WI@columnspread@after
+      \WI@usetcbitemizefalse
+    \fi
+  }%
+  \renewcommand{\tcbitem@first}[1][]{%
+    \WI@tcbitem@prepare
+    \let\tcbitem=\tcbitem@following
+    \begin{tcolorbox}[{##1}]%
+  }%
+  \renewcommand{\tcbitem@following}[1][]{%
+    \end{tcolorbox}%
+    \WI@tcbitem@finalize
+    \WI@tcbitem@prepare
+    \begin{tcolorbox}[{##1}]%
+  }%
+}
+
+\@ifundefined{tcbitemize}{%
+  \AtBeginDocument{\@ifpackageloaded{tcolorbox}{\columnspread@setuptcb}{}}%
+}{%
+  \columnspread@setuptcb
+}
+
+\makeatother
+%    \end{macrocode}
+%</package>
+% \Finale
