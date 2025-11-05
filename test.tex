@@ -7,6 +7,29 @@
 \usepackage[most]{tcolorbox}
 
 \makeatletter
+% ------------------------------------------------------------------
+% columnspread user guide (keep in sync with README once packaged)
+% ------------------------------------------------------------------
+% - Register environments by name:
+%     \columnspreadfor{itemize,enumerate}
+%   or patch one at a time:
+%     \ColumnSpreadPatch{choices}
+%
+% - columnspread keys:
+%     \begin{columnspread}[<max cols>][<key>]
+%   The optional key (e.g. [5][Q1]) persists column widths across runs
+%   and is suffixed automatically (Q1-1, Q1-2, …) per top-level list.
+%
+% - Only the first list level inside the environment is spread; nested
+%   sub-lists stay single column. Avoid verbatim-like content, minted,
+%   lstlisting, or floats inside items; they can break detection.
+%
+% - If column counts oscillate between compilations, clear aux files
+%   and compile twice so cached column totals stabilise.
+%
+% - Floats (figure/table) inside spread items are discouraged; a warning
+%   is emitted when they are detected and layout may degrade.
+% ------------------------------------------------------------------
 \newif\ifWI@pending
 \newif\ifWI@broke
 \newif\ifWI@rerun
@@ -35,6 +58,28 @@
 \WI@columnspreadlistcount=0\relax
 \newcommand\WI@columnspreadcols{\WI@defaultmaxcols}
 \newcommand\WI@columnspreadkey{}
+
+\@namedef{columnspread@preset@exam}{itemize,enumerate,description,choices,checkboxes,oneparchoices,oneparcheckboxes,parts,subparts}
+
+\providecommand\columnspread@optiondefaults{}
+\newcommand\columnspread@applydefaults[1]{%
+  \edef\columnspread@optiondefaults{#1}%
+  \@ifundefined{columnspread@preset@\columnspread@optiondefaults}{%
+    \PackageWarning{columnspread}{Unknown defaults preset '#1'; ignoring}%
+  }{%
+    \columnspreadfor{\csname columnspread@preset@\columnspread@optiondefaults\endcsname}%
+  }%
+}
+
+\providecommand\columnspread@optionsprocessed{}%
+\ifx\columnspread@optionsprocessed\@empty
+  \DeclareOption{defaults=exam}{\columnspread@applydefaults{exam}}
+  \DeclareOption*{%
+    \PackageWarning{columnspread}{Unknown option '\CurrentOption'}%
+  }
+  \ProcessOptions\relax
+  \let\columnspread@optionsprocessed\relax
+\fi
 
 \newif\ifWI@usetcbitemize
 \newif\ifWI@hadtcbcolumns
@@ -93,6 +138,14 @@
   \fi
   \WI@pendingfalse
 }
+
+\newcommand\WI@floatwarn[1]{%
+  \ifWI@active
+    \PackageWarning{columnspread}{Floating environments inside columnspread items are unsupported; move the float outside}%
+  \fi
+}
+\pretocmd{\@float}{\WI@floatwarn{#1}}{}{}
+\pretocmd{\@dblfloat}{\WI@floatwarn{#1}}{}{}
 
 \newcommand\WI@checkpending{%
   \ifWI@active
@@ -277,6 +330,14 @@
   \@ifundefined{#1}{}{%
     \WI@columnspread@patch{#1}%
   }%
+}
+
+\NewDocumentCommand{\ColumnSpreadPatch}{m}{%
+  \WI@columnspread@patch{#1}%
+}
+
+\NewDocumentCommand{\columnspreadfor}{m}{%
+  \forcsvlist{\WI@columnspread@maybe}{#1}%
 }
 
 \NewDocumentEnvironment{columnspread}{O{\WI@defaultmaxcols} o}
@@ -503,7 +564,9 @@ It also works with description lists:
 \end{description}
 \end{columnspread}
 
-\subsection{TCB Itemize}
+\subsection{TCB Itemize from tcolorbox}
+
+We can also use it with tcolorbox's tcbitemize environment:
 
 \begin{columnspread}[5]
 \begin{tcbitemize}[size=fbox]
@@ -517,6 +580,5 @@ It also works with description lists:
     %\tcbitem The People's Democratic Republic of Algeria
 \end{tcbitemize}
 \end{columnspread}
-
 
 \end{document}
