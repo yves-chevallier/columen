@@ -22,6 +22,51 @@ The goal is to make this demo work with most itemize-like environments, includin
 \item tcolorbox item lists
 \end{itemize}
 
+\section{In minipage}
+
+\fbox{%
+\centering
+  \begin{minipage}[t]{8cm}
+\begin{columnspread}[5]
+\begin{itemize}
+  \item Lorem ipsum dolor sit amet
+  \item Sed sed metus arcu
+  \item Donec semper lorem nisi
+  \item Aenean augue justo
+\end{itemize}
+\end{columnspread}
+  \end{minipage}%
+}
+
+\fbox{%
+\centering
+  \begin{minipage}[t]{12cm}
+\begin{columnspread}[5]
+\begin{itemize}
+  \item Lorem ipsum do
+  \item Sed sed metus ar
+  \item Donec semper lor
+  \item Aenean augue jus
+\end{itemize}
+\end{columnspread}
+  \end{minipage}%
+}
+
+\fbox{%
+\centering
+  \begin{minipage}[t]{\textwidth}
+\begin{columnspread}[5]
+\begin{itemize}
+  \item Lorem ipsum do
+  \item Sed sed metus ar
+  \item Donec semper lor
+  \item Aenean augue jus
+\end{itemize}
+\end{columnspread}
+  \end{minipage}%
+}
+
+
 \section{Examples}
 
 \subsection{Itemize}

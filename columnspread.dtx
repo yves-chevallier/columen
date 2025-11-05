@@ -105,38 +105,82 @@ maximum number of columns; the default is~\texttt{5}.
 \noindent With shorter items, more columns may fit:
 
 \begin{verbatim}
+\fbox{%
+  \begin{minipage}[t]{10cm}
 \begin{columnspread}[5]
 \begin{itemize}
-  \item Alpha
-  \item Beta
-  \item Gamma
-  \item Delta
-  \item Epsilon
-  \item Zeta
-  \item Eta
-  \item Theta
-  \item Iota
-  \item Kappa
+  \item Methyl Alcohol
+  \item Hexafluoroethane
+  \item Sodium Chloride
+  \item Calcium Carbonate
 \end{itemize}
 \end{columnspread}
+  \end{minipage}%
+}
 \end{verbatim}
 
-\begin{columnspreaddemo}
+\begingroup
+\setlength{\leftmargini}{0.6em}
+\setlength{\labelsep}{0.3em}
+\setlength{\labelwidth}{0.7em}
+\setlength{\itemsep}{0pt}
+\setlength{\parsep}{0pt}
+\setlength{\topsep}{0pt}
+\setlength{\columnsep}{6pt}
+
+\fbox{%
+\centering
+  \begin{minipage}[t]{8cm}
 \begin{columnspread}[5]
 \begin{itemize}
-  \item Alpha
-  \item Beta
-  \item Gamma
-  \item Delta
-  \item Epsilon
-  \item Zeta
-  \item Eta
-  \item Theta
-  \item Iota
-  \item Kappa
+  \item Lorem ipsum dolor sit amet
+  \item Sed sed metus arcu
+  \item Donec semper lorem nisi
+  \item Aenean augue justo
 \end{itemize}
 \end{columnspread}
-\end{columnspreaddemo}
+  \end{minipage}%
+}
+
+\endgroup
+
+\begingroup
+\setlength{\leftmargini}{0.6em}
+\setlength{\labelsep}{0.3em}
+\setlength{\labelwidth}{0.7em}
+\setlength{\itemsep}{0pt}
+\setlength{\parsep}{0pt}
+\setlength{\topsep}{0pt}
+\setlength{\columnsep}{6pt}
+
+\fbox{%
+\centering
+  \begin{minipage}[t]{12cm}
+\begin{columnspread}[5]
+\begin{itemize}
+  \item Lorem ipsum do
+  \item Sed sed metus ar
+  \item Donec semper lor
+  \item Aenean augue jus
+\end{itemize}
+\end{columnspread}
+  \end{minipage}%
+}
+
+\fbox{%
+\centering
+  \begin{minipage}[t]{\textwidth}
+\begin{columnspread}[5]
+\begin{itemize}
+  \item Lorem ipsum do
+  \item Sed sed metus ar
+  \item Donec semper lor
+  \item Aenean augue jus
+\end{itemize}
+\end{columnspread}
+  \end{minipage}%
+}
+\endgroup
 
 \noindent A second optional argument acts as a key. Lists sharing the same key also
 share their column history:
