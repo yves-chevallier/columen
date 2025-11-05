@@ -1,4 +1,4 @@
-\documentclass{article}
+\documentclass{exam}
 
 \usepackage{multicol}
 \usepackage{xparse}
@@ -82,26 +82,38 @@
   \fi
 }
 
+\newcommand\WI@ensurehooks{%
+  \ifWI@nested
+  \else
+    % 1) each \item arms the flag
+    \let\WI@origitem\item
+    \def\item{\WI@pendingtrue\WI@origitem}%
+    % 2) hook: end of an item's paragraph
+    \edef\@@par{\unexpanded\expandafter{\@@par\WI@maybeWarn}}%
+    \WI@nestedtrue
+  \fi
+}
+
+\newcommand\WI@beginmonitoredlist{%
+  \global\WI@brokefalse
+  \WI@ensurehooks
+}
+
+\newcommand\WI@endmonitoredlist{%
+  \WI@maybeWarn
+}
+
 \newenvironment{warnitemize}
   {%
-    \global\WI@brokefalse
+    \WI@beginmonitoredlist
     \begin{itemize}%
-      \ifWI@nested
-      \else
-        % 1) each \item arms the flag
-        \let\WI@origitem\item
-        \def\item{\WI@pendingtrue\WI@origitem}%
-        % 2) hook: end of an item's paragraph
-        \edef\@@par{\unexpanded\expandafter{\@@par\WI@maybeWarn}}%
-        \WI@nestedtrue
-      \fi
   }
   {%
-      \par
+    \WI@endmonitoredlist
     \end{itemize}%
   }
 
-\newcommand\WI@multicolitemize@begin[1]{%
+\newcommand\WI@startcolumns[1]{%
     \WI@maxcolumns=#1\relax
     \ifnum\WI@maxcolumns<1 \WI@maxcolumns=1\fi
     \WI@lockedfalse
@@ -128,11 +140,9 @@
         \begin{multicols}{\the\WI@columncount}%
       \fi
     \fi
-    \begin{warnitemize}%
 }
 
-\newcommand\WI@multicolitemize@end{%
-    \end{warnitemize}%
+\newcommand\WI@endcolumns{%
     \ifWI@usemulticols
       \ifWI@star
         \end{multicols*}%
@@ -170,21 +180,49 @@
     \WI@starfalse
 }
 
-\NewDocumentEnvironment{warnmulticolitemize}{O{\WI@defaultmaxcols} o}
+\NewDocumentEnvironment{warnmulticol}{O{\WI@defaultmaxcols} o}
   {%
     \WI@starfalse
     \IfNoValueTF{#2}{\WI@generatekey}{\def\WI@currentkey{#2}}%
-    \WI@multicolitemize@begin{#1}%
+    \WI@startcolumns{#1}%
+    \WI@beginmonitoredlist
   }
-  {\WI@multicolitemize@end}
+  {%
+    \WI@endmonitoredlist
+    \WI@endcolumns
+  }
 
-\NewDocumentEnvironment{warnmulticolitemize*}{O{\WI@defaultmaxcols} o}
+\NewDocumentEnvironment{warnmulticol*}{O{\WI@defaultmaxcols} o}
   {%
     \WI@startrue
     \IfNoValueTF{#2}{\WI@generatekey}{\def\WI@currentkey{#2}}%
-    \WI@multicolitemize@begin{#1}%
+    \WI@startcolumns{#1}%
+    \WI@beginmonitoredlist
   }
-  {\WI@multicolitemize@end}
+  {%
+    \WI@endmonitoredlist
+    \WI@endcolumns
+  }
+
+\NewDocumentEnvironment{warnmulticolitemize}{O{\WI@defaultmaxcols} o}
+  {%
+    \IfNoValueTF{#2}{\begin{warnmulticol}[#1]}{\begin{warnmulticol}[#1][#2]}%
+    \begin{itemize}%
+  }
+  {%
+    \end{itemize}%
+    \end{warnmulticol}%
+  }
+
+\NewDocumentEnvironment{warnmulticolitemize*}{O{\WI@defaultmaxcols} o}
+  {%
+    \IfNoValueTF{#2}{\begin{warnmulticol*}[#1]}{\begin{warnmulticol*}[#1][#2]}%
+    \begin{itemize}%
+  }
+  {%
+    \end{itemize}%
+    \end{warnmulticol*}%
+  }
 
 \makeatother
 
@@ -216,6 +254,30 @@ euismod orci ac vulputate. Nam tempor arcu ex.
   \item Iota
   \item Kappa
 \end{warnmulticolitemize}
+
+\subsection*{Wrapping enumerate}
+\begin{warnmulticol}[4]
+  \begin{enumerate}
+    \item First option
+    \item Second option
+    \item Third option
+    \item Fourth option
+    \item Fifth option
+  \end{enumerate}
+\end{warnmulticol}
+
+\subsection*{Exam checkboxes}
+\begin{warnmulticol}[4]
+  \begin{checkboxes}
+    \choice Option alpha with a little extra
+    \choice Option beta
+    \choice Option gamma
+    \choice Option delta
+    \choice Option epsilon
+    \choice Option zeta
+    \choice Option eta
+  \end{checkboxes}
+\end{warnmulticol}
 
 \subsection*{Starred variant without balancing}
 \begin{warnmulticolitemize*}[5]
