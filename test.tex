@@ -1,0 +1,236 @@
+\documentclass{article}
+
+\usepackage{multicol}
+\usepackage{xparse}
+
+\makeatletter
+\newif\ifWI@pending
+\newif\ifWI@nested
+\newif\ifWI@broke
+\newif\ifWI@rerun
+\newif\ifWI@usemulticols
+\newif\ifWI@locked
+\newif\ifWI@star
+\WI@rerunfalse
+
+\newcount\WI@columncount
+\newcount\WI@nextcolumns
+\newcount\WI@maxcolumns
+\newcount\WI@listcounter
+\WI@listcounter=0\relax
+
+\newcommand\WI@defaultmaxcols{5}
+
+\newcommand\WI@getcols[1]{%
+  \@ifundefined{WI@cols@#1}{1}{\csname WI@cols@#1\endcsname}%
+}
+
+\newcommand\WI@definecols[2]{%
+  \expandafter\gdef\csname WI@cols@#1\endcsname{#2}%
+}
+
+\newcommand\WI@writecols[2]{%
+  \begingroup
+    \edef\WI@tempa{\string\WI@definecols{#1}{#2}}%
+    \protected@write\@auxout{}{\WI@tempa}%
+  \endgroup
+}
+
+\newcommand\WI@getlock[1]{%
+  \@ifundefined{WI@lock@#1}{0}{\csname WI@lock@#1\endcsname}%
+}
+
+\newcommand\WI@definelock[2]{%
+  \expandafter\gdef\csname WI@lock@#1\endcsname{#2}%
+}
+
+\newcommand\WI@writelock[2]{%
+  \begingroup
+    \edef\WI@tempb{\string\WI@definelock{#1}{#2}}%
+    \protected@write\@auxout{}{\WI@tempb}%
+  \endgroup
+}
+
+\newcommand\WI@generatekey{%
+  \global\advance\WI@listcounter\@ne
+  \edef\WI@currentkey{auto-\the\WI@listcounter}%
+}
+
+\newcommand\warnmulticolreset[1]{%
+  \WI@definecols{#1}{1}%
+  \WI@definelock{#1}{0}%
+  \WI@writecols{#1}{1}%
+  \WI@writelock{#1}{0}%
+}
+
+\AtEndDocument{%
+  \ifWI@rerun
+    \PackageWarningNoLine{warnitemize}{List columns expanded; rerun LaTeX}%
+  \fi
+}
+
+\newcommand\WI@maybeWarn{%
+  \ifWI@pending
+    \expandafter\WI@maybeWarn@\expandafter{\the\prevgraf}%
+    \WI@pendingfalse
+  \fi
+}
+\newcommand\WI@maybeWarn@[1]{%
+  \ifnum#1>1
+    \global\WI@broketrue
+    \PackageWarning{warnitemize}{A list item broke across #1 lines}%
+  \fi
+}
+
+\newenvironment{warnitemize}
+  {%
+    \global\WI@brokefalse
+    \begin{itemize}%
+      \ifWI@nested
+      \else
+        % 1) each \item arms the flag
+        \let\WI@origitem\item
+        \def\item{\WI@pendingtrue\WI@origitem}%
+        % 2) hook: end of an item's paragraph
+        \edef\@@par{\unexpanded\expandafter{\@@par\WI@maybeWarn}}%
+        \WI@nestedtrue
+      \fi
+  }
+  {%
+      \par
+    \end{itemize}%
+  }
+
+\newcommand\WI@multicolitemize@begin[1]{%
+    \WI@maxcolumns=#1\relax
+    \ifnum\WI@maxcolumns<1 \WI@maxcolumns=1\fi
+    \WI@lockedfalse
+    \WI@usemulticolstrue
+    \ifWI@star
+      \WI@columncount=\WI@maxcolumns
+    \else
+      \WI@columncount=\WI@getcols{\WI@currentkey}\relax
+      \ifnum\WI@columncount<1 \WI@columncount=1\fi
+      \ifnum\WI@columncount>\WI@maxcolumns
+        \WI@columncount=\WI@maxcolumns
+      \fi
+      \ifnum\WI@getlock{\WI@currentkey}>0\relax
+        \WI@lockedtrue
+      \fi
+    \fi
+    \ifnum\WI@columncount=1
+      \WI@usemulticolsfalse
+    \fi
+    \ifWI@usemulticols
+      \ifWI@star
+        \begin{multicols*}{\the\WI@columncount}%
+      \else
+        \begin{multicols}{\the\WI@columncount}%
+      \fi
+    \fi
+    \begin{warnitemize}%
+}
+
+\newcommand\WI@multicolitemize@end{%
+    \end{warnitemize}%
+    \ifWI@usemulticols
+      \ifWI@star
+        \end{multicols*}%
+      \else
+        \end{multicols}%
+      \fi
+    \fi
+    \ifWI@star
+      % starred variant is manual; keep requested column count
+    \else
+      \WI@nextcolumns=\WI@columncount
+      \ifWI@broke
+        \ifnum\WI@columncount>1
+          \advance\WI@nextcolumns\m@ne
+          \WI@lockedtrue
+        \fi
+      \else
+        \ifWI@locked
+          % keep current column count
+        \else
+          \ifnum\WI@nextcolumns<\WI@maxcolumns
+            \advance\WI@nextcolumns\@ne
+            \global\WI@reruntrue
+          \fi
+        \fi
+      \fi
+      \ifnum\WI@nextcolumns<1 \WI@nextcolumns=1\fi
+      \WI@writecols{\WI@currentkey}{\the\WI@nextcolumns}%
+      \ifWI@locked
+        \WI@writelock{\WI@currentkey}{1}%
+      \else
+        \WI@writelock{\WI@currentkey}{0}%
+      \fi
+    \fi
+    \WI@starfalse
+}
+
+\NewDocumentEnvironment{warnmulticolitemize}{O{\WI@defaultmaxcols} o}
+  {%
+    \WI@starfalse
+    \IfNoValueTF{#2}{\WI@generatekey}{\def\WI@currentkey{#2}}%
+    \WI@multicolitemize@begin{#1}%
+  }
+  {\WI@multicolitemize@end}
+
+\NewDocumentEnvironment{warnmulticolitemize*}{O{\WI@defaultmaxcols} o}
+  {%
+    \WI@startrue
+    \IfNoValueTF{#2}{\WI@generatekey}{\def\WI@currentkey{#2}}%
+    \WI@multicolitemize@begin{#1}%
+  }
+  {\WI@multicolitemize@end}
+
+\makeatother
+
+\begin{document}
+
+\section*{warnmulticolitemize demo}
+
+\subsection*{Break detection locks columns}
+\begin{warnmulticolitemize}[5]
+  \item Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur vel
+lectus at elit imperdiet laoreet. Aliquam eget mi sit amet lacus varius facilisis.
+Pellentesque pharetra mauris non dolor vehicula molestie eu non dolor.
+Duis ligula est, convallis eget nibh a, tincidunt semper velit. Sed commodo
+euismod orci ac vulputate. Nam tempor arcu ex.
+  \item Second item short.
+  \item Third item \\ with forced line break.
+\end{warnmulticolitemize}
+
+\subsection*{Automatic widening to five columns}
+\begin{warnmulticolitemize}[5]
+  \item Alpha Bravo
+  \item Beta
+  \item Gamma
+  \item Delta
+  \item Epsilon
+  \item Zeta
+  \item Eta
+  \item Theta
+  \item Iota
+  \item Kappa
+\end{warnmulticolitemize}
+
+\subsection*{Starred variant without balancing}
+\begin{warnmulticolitemize*}[5]
+  \item One
+  \item Two
+  \item Three
+  \item Four
+  \item Five
+  \item Six
+  \item Seven
+  \item Eight
+  \item Nine
+  \item Ten
+  \item Eleven
+  \item Twelve
+\end{warnmulticolitemize*}
+
+\end{document}
