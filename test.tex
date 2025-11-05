@@ -4,6 +4,7 @@
 \usepackage{multicol}
 \usepackage{xparse}
 \usepackage{etoolbox}
+\usepackage[most]{tcolorbox}
 
 \makeatletter
 \newif\ifWI@pending
@@ -401,5 +402,21 @@ It also works with description lists:
   \item[Honeydew] A sweet green melon.
 \end{description}
 \end{columnspread}
+
+\subsection{TCP Itemize}
+
+\begin{minipage}{\linewidth}%
+    \begin{tcbitemize}[size=fbox,sharp corners,
+        colframe=black,colback=white,boxrule=1.0pt,
+        raster equal height,raster force size=false,
+        raster equal skip=0pt,raster column skip=2mm,raster columns=3]
+        \tcbitem[width=0.3\linewidth]
+            A
+        \tcbitem[width=0.3\linewidth]
+            B
+        \tcbitem[width=0.3\linewidth]
+            C
+    \end{tcbitemize}%
+\end{minipage}
 
 \end{document}
