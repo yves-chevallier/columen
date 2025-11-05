@@ -22,457 +22,403 @@
 \CodelineIndex
 \RecordChanges
 \begin{document}
+\GetFileInfo{columnspread.sty}
+
+\title{The \textsf{columnspread} package}
+\author{Yves Chevallier}
+\date{\filedate\ \fileversion}
+
+\maketitle
+
+\begin{abstract}
+The \textsf{columnspread} package automatically spreads items from list
+environments across multiple columns while keeping whole items in a single
+column.  Column counts are stored in the \texttt{.aux} file, so the document
+converges after at most two recompilations.  The package works with
+\texttt{itemize}, \texttt{enumerate}, classes derived from the
+\textsf{exam} bundle (choices, checkboxes, \ldots) and integrates with
+\textsf{tcolorbox}'s \texttt{tcbitemize}.
+\end{abstract}
+
+\tableofcontents
+
+\providecommand*{\env}[1]{\texttt{#1}}
+\newenvironment{columnspreaddemo}{%
+  \par\smallskip
+  \noindent\textbf{Result:}\par\smallskip
+}{%
+  \par\smallskip
+}
+\section{Overview}
+Teachers, exam setters, and technical writers regularly prepare documents
+containing lists of short items.  When those lists are laid out in several
+columns the page count drops, yet manually balancing the content soon becomes
+tedious.  The \textsf{columnspread} package automates this balancing act:
+for every registered list environment it remembers how many columns were
+required without breaking an item, and it restores that configuration on the
+next run.  Column counts are persisted via the auxiliary file, so the workflow
+mirrors that of cross references---compile twice after significant edits and
+the layout stabilises.
+\section{Package interface}
+\subsection{Loading the package}
+The package can be loaded directly:
+\begin{verbatim}
+\usepackage{columnspread}
+\end{verbatim}
+or with a preset that enables several environments at once:
+\begin{verbatim}
+\usepackage[defaults=exam]{columnspread}
+\end{verbatim}
+The \texttt{defaults=exam} preset expands to
+\begin{verbatim}
+itemize,enumerate,description,choices,checkboxes,
+oneparchoices,oneparcheckboxes,parts,subparts
+\end{verbatim}
+Additional presets may be added in future versions.  Independently of the
+chosen preset, environments can be registered manually at any point in the
+document using the user-level helpers described below.
+\subsection{Registering environments}
+\DescribeMacro{\columnspreadfor}
+  accepts a comma-separated list of environment names and wires each of them
+  into the column balancing machinery.
+\DescribeMacro{\ColumnSpreadPatch}
+  patches a single environment immediately.  Internally it shares the same
+  implementation as \cs{columnspreadfor}, but the dedicated macro is useful
+  when building bespoke presets in package code.
+The package integrates with \textsf{tcolorbox} automatically: when the
+\pkg{tcolorbox} package is loaded, the \env{tcbitemize} environment behaves
+like any other list registered with \textsf{columnspread}.
+\subsection{Balancing lists}
+Wrap one or several compatible list environments inside the
+\DescribeEnv{columnspread} environment.  The first optional argument sets the
+maximum number of columns; the default is~\texttt{5}.
+\begin{verbatim}
+\begin{columnspread}[5]
+  \begin{itemize}
+    \item Alpha
+    \item Beta
+    \item Gamma
+  \end{itemize}
+\end{columnspread}
+\end{verbatim}
+
+\begin{columnspreaddemo}
+\begin{columnspread}[5]
+\begin{itemize}
+  \item Odin Allfather
+  \item Thor Thunderer
+  \item Loki Trickster
+  \item Freyja Vanir Goddess
+  \item Tyr God of War
+  \item Baldr Shining One
+  \item Heimdall Watchman
+  \item Njord Sea Deity
+  \item Skadi Winter Huntress
+  \item Hel Ruler of the Dead
+\end{itemize}
+\end{columnspread}
+\end{columnspreaddemo}
+\begin{columnspreaddemo}
+\begin{columnspread}[5]
+\begin{itemize}
+  \item Alpha
+  \item Beta
+  \item Gamma
+  \item Delta
+  \item Epsilon
+  \item Zeta
+  \item Eta
+  \item Theta
+  \item Iota
+  \item Kappa
+\end{itemize}
+\end{columnspread}
+\end{columnspreaddemo}
+\begin{columnspreaddemo}
+\begin{columnspread}[5]
+  \begin{itemize}
+    \item Alpha
+    \item Beta
+    \item Gamma
+  \end{itemize}
+\end{columnspread}
+\end{columnspreaddemo}
+A second optional argument acts as a key.  Lists sharing the same key also
+share their column history:
+\begin{verbatim}
+\begin{columnspread}[4][Planets]
+  \begin{choices} ... \end{choices}
+  \begin{choices} ... \end{choices}
+\end{columnspread}
+\end{verbatim}
+\begin{columnspreaddemo}
+\begin{columnspread}[4][Planets]
+  \begin{choices}
+    \choice Mercury
+    \choice Venus
+    \choice Earth
+    \choice Mars
+  \end{choices}
+  \begin{choices}
+    \choice Jupiter
+    \choice Saturn
+    \choice Uranus
+    \choice Neptune
+  \end{choices}
+\end{columnspread}
+\end{columnspreaddemo}
+When no key is supplied the package generates a unique identifier of the
+form \verb|auto-<number>|.  The columns are increased gradually up to the
+configured maximum when all items fit, and reduced (and locked) whenever an
+item breaks across a column or page boundary.
+Only the first list level inside \env{columnspread} is affected.  Nested
+lists remain single column, which keeps the implementation compatible with
+packages such as \pkg{enumitem}.
+\subsection{Practical guidance}
+\begin{itemize}
+  \item \textbf{Compilation.} Because the column counts are stored in the
+    auxiliary file, run \LaTeX\ twice after making significant edits.  The
+    package issues a friendly warning if another pass is needed.
+  \item \textbf{Floats.} Placing floats (figures or tables) inside a balanced
+    list is discouraged.  \textsf{columnspread} detects the situation and
+    warns, but lets the document compile in case the author is satisfied with
+    the result.
+  \item \textbf{Verbatim content.} Environments that alter paragraph building
+    heavily---\texttt{verbatim}, \pkg{minted}, \pkg{listings}---may confuse
+    the heuristic that detects broken items.  Where possible, move them
+    outside the \env{columnspread} block.
+\end{itemize}
+\section{Examples}
+The following examples mirror the demo document distributed with the package.
+They may be copied verbatim into a document after
+\verb|\usepackage[defaults=exam]{columnspread}|.
+\subsection*{Itemize}
+\begin{verbatim}
+\begin{columnspread}[5]
+\begin{itemize}
+  \item Alpha
+  \item Beta
+  \item Gamma
+  \item Delta
+  \item Epsilon
+  \item Zeta
+  \item Eta
+  \item Theta
+  \item Iota
+  \item Kappa
+\end{itemize}
+\end{columnspread}
+\end{verbatim}
+\begin{columnspreaddemo}
+\begin{columnspread}[5]
+\begin{itemize}
+  \item Odin Allfather
+  \item Thor Thunderer
+  \item Loki Trickster
+  \item Freyja Vanir Goddess
+  \item Tyr God of War
+  \item Baldr Shining One
+  \item Heimdall Watchman
+  \item Njord Sea Deity
+  \item Skadi Winter Huntress
+  \item Hel Ruler of the Dead
+\end{itemize}
+\end{columnspread}
+\end{columnspreaddemo}
+\begin{columnspreaddemo}
+\begin{columnspread}[5]
+\begin{itemize}
+  \item Alpha
+  \item Beta
+  \item Gamma
+  \item Delta
+  \item Epsilon
+  \item Zeta
+  \item Eta
+  \item Theta
+  \item Iota
+  \item Kappa
+\end{itemize}
+\end{columnspread}
+\end{columnspreaddemo}
+\begin{verbatim}
+\begin{columnspread}[5]
+\begin{itemize}
+  \item Odin Allfather
+  \item Thor Thunderer
+  \item Loki Trickster
+  \item Freyja Vanir Goddess
+  \item Tyr God of War
+  \item Baldr Shining One
+  \item Heimdall Watchman
+  \item Njord Sea Deity
+  \item Skadi Winter Huntress
+  \item Hel Ruler of the Dead
+\end{itemize}
+\end{columnspread}
+\end{verbatim}
+\subsection*{Enumerate}
+Replace the \env{itemize} environment with \env{enumerate} to balance numbered
+lists.  The column adjustment works the same as in the previous example.
+\subsection*{Exam checkboxes}
+\begin{verbatim}
+\begin{questions}
+\question Which animal is known as the ``King of the Jungle''?
+\begin{columnspread}[5]
+\begin{checkboxes}
+  \CorrectChoice Lion
+  \choice Tiger
+  \choice Elephant
+  \choice Giraffe
+  \choice Zebra
+  \choice Cheetah
+  \choice Gorilla
+  \choice Hyena
+  \choice Leopard
+  \choice Rhino
+\end{checkboxes}
+\end{columnspread}
+\end{questions}
+\end{verbatim}
+\begin{columnspreaddemo}
+\begin{questions}
+\question Which animal is known as the ``King of the Jungle''?
+\begin{columnspread}[5]
+\begin{checkboxes}
+  \CorrectChoice Lion
+  \choice Tiger
+  \choice Elephant
+  \choice Giraffe
+  \choice Zebra
+  \choice Cheetah
+  \choice Gorilla
+  \choice Hyena
+  \choice Leopard
+  \choice Rhino
+\end{checkboxes}
+\end{columnspread}
+\end{questions}
+\end{columnspreaddemo}
+\subsection*{Shared keys}
+\begin{verbatim}
+\begin{columnspread}[4][Q1]
+\begin{choices}
+  \choice Mercury
+  \choice Venus
+  \choice Earth
+  \choice Mars
+  \choice Jupiter
+  \choice Saturn
+\end{choices}
+\begin{choices}
+  \choice Uranus
+  \choice Neptune
+  \choice Pluto
+  \choice Haumea
+  \choice Eris
+  \choice Ceres
+\end{choices}
+\end{columnspread}
+\end{verbatim}
+\begin{columnspreaddemo}
+\begin{columnspread}[5][Q1]
+\begin{choices}
+  \choice Mercury
+  \choice Venus
+  \choice Earth
+  \choice Mars
+  \choice Jupiter
+  \choice Saturn
+\end{choices}
+\begin{choices}
+  \choice Uranus
+  \choice Neptune
+  \choice Pluto
+  \choice Haumea
+  \choice Eris
+  \choice Ceres
+\end{choices}
+\end{columnspread}
+\end{columnspreaddemo}
+% Warning demo (optional for end users)
+\begin{verbatim}
+% \begin{columnspread}[2]
+% \begin{itemize}
+%   \item This item wraps a figure float to trigger the warning.
+%     \begin{figure}[h]
+%       \centering
+%       \rule{2cm}{2cm}
+%       \caption{Float inside columnspread (demo)}
+%     \end{figure}
+% \end{itemize}
+% \end{columnspread}
+\end{verbatim}
+\subsection*{Descriptions}
+\begin{verbatim}
+\begin{columnspread}[3]
+\begin{description}
+  \item[Apple] A sweet red fruit.
+  \item[Banana] A long yellow fruit.
+  \item[Cherry] A small red fruit.
+  \item[Date] A sweet brown fruit.
+  \item[Elderberry] A small dark fruit.
+  \item[Fig] A pear-shaped fruit.
+  \item[Grape] A small round fruit.
+  \item[Honeydew] A sweet green melon.
+\end{description}
+\end{columnspread}
+\end{verbatim}
+\begin{columnspreaddemo}
+\begin{columnspread}[3]
+\begin{description}
+  \item[Apple] A sweet red fruit.
+  \item[Banana] A long yellow fruit.
+  \item[Cherry] A small red fruit.
+  \item[Date] A sweet brown fruit.
+  \item[Elderberry] A small dark fruit.
+  \item[Fig] A pear-shaped fruit.
+  \item[Grape] A small round fruit.
+  \item[Honeydew] A sweet green melon.
+\end{description}
+\end{columnspread}
+\end{columnspreaddemo}
+\subsection*{tcolorbox integration}
+\begin{verbatim}
+\begin{columnspread}[5]
+\begin{tcbitemize}[size=fbox]
+  \tcbitem Argentina
+  \tcbitem Brazil
+  \tcbitem Chile
+  \tcbitem Denmark
+  \tcbitem Ecuador
+  \tcbitem France
+  \tcbitem The People's Democratic Republic of Algeria
+\end{tcbitemize}
+\end{columnspread}
+\end{verbatim}
+\begin{columnspreaddemo}
+\begin{columnspread}[5]
+\begin{tcbitemize}[size=fbox]
+  \tcbitem Argentina
+  \tcbitem Brazil
+  \tcbitem Chile
+  \tcbitem Denmark
+  \tcbitem Ecuador
+  \tcbitem France
+  \tcbitem The People's Democratic Republic of Algeria
+\end{tcbitemize}
+\end{columnspread}
+\end{columnspreaddemo}
+\StopEventually{\PrintChanges\PrintIndex}
+\section{Implementation}
+The implementation closely follows the exploratory code that powered the
+original demo document.
   \DocInput{columnspread.dtx}
 \end{document}
 %</driver>
 % \fi
 %
-% \GetFileInfo{columnspread.sty}
 %
-% \title{The \textsf{columnspread} package}
-% \author{Yves Chevallier}
-% \date{\filedate\ \fileversion}
-%
-% \maketitle
-%
-% \begin{abstract}
-% The \textsf{columnspread} package automatically spreads items from list
-% environments across multiple columns while keeping whole items in a single
-% column.  Column counts are stored in the \texttt{.aux} file, so the document
-% converges after at most two recompilations.  The package works with
-% \texttt{itemize}, \texttt{enumerate}, classes derived from the
-% \textsf{exam} bundle (choices, checkboxes, \ldots) and integrates with
-% \textsf{tcolorbox}'s \texttt{tcbitemize}.
-% \end{abstract}
-%
-% \tableofcontents
-%
-% \providecommand*{\env}[1]{\texttt{#1}}
-% \newenvironment{columnspreaddemo}{%
-%   \par\smallskip
-%   \noindent\textbf{Result:}\par\smallskip
-% }{%
-%   \par\smallskip
-% }
-%
-% \section{Overview}
-%
-% Teachers, exam setters, and technical writers regularly prepare documents
-% containing lists of short items.  When those lists are laid out in several
-% columns the page count drops, yet manually balancing the content soon becomes
-% tedious.  The \textsf{columnspread} package automates this balancing act:
-% for every registered list environment it remembers how many columns were
-% required without breaking an item, and it restores that configuration on the
-% next run.  Column counts are persisted via the auxiliary file, so the workflow
-% mirrors that of cross references---compile twice after significant edits and
-% the layout stabilises.
-%
-% \section{Package interface}
-%
-% \subsection{Loading the package}
-%
-% The package can be loaded directly:
-%
-% \begin{verbatim}
-% \usepackage{columnspread}
-% \end{verbatim}
-%
-% or with a preset that enables several environments at once:
-%
-% \begin{verbatim}
-% \usepackage[defaults=exam]{columnspread}
-% \end{verbatim}
-%
-% The \texttt{defaults=exam} preset expands to
-%
-% \begin{verbatim}
-% itemize,enumerate,description,choices,checkboxes,
-% oneparchoices,oneparcheckboxes,parts,subparts
-% \end{verbatim}
-%
-% Additional presets may be added in future versions.  Independently of the
-% chosen preset, environments can be registered manually at any point in the
-% document using the user-level helpers described below.
-%
-% \subsection{Registering environments}
-%
-% \DescribeMacro{\columnspreadfor}
-%   accepts a comma-separated list of environment names and wires each of them
-%   into the column balancing machinery.
-%
-% \DescribeMacro{\ColumnSpreadPatch}
-%   patches a single environment immediately.  Internally it shares the same
-%   implementation as \cs{columnspreadfor}, but the dedicated macro is useful
-%   when building bespoke presets in package code.
-%
-% The package integrates with \textsf{tcolorbox} automatically: when the
-% \pkg{tcolorbox} package is loaded, the \env{tcbitemize} environment behaves
-% like any other list registered with \textsf{columnspread}.
-%
-% \subsection{Balancing lists}
-%
-% Wrap one or several compatible list environments inside the
-% \DescribeEnv{columnspread} environment.  The first optional argument sets the
-% maximum number of columns; the default is~\texttt{5}.
-%
-% \begin{verbatim}
-% \begin{columnspread}[5]
-%   \begin{itemize}
-%     \item Alpha
-%     \item Beta
-%     \item Gamma
-%   \end{itemize}
-% \end{columnspread}
-% \end{verbatim}
-%
-% \begin{columnspreaddemo}
-% \begin{columnspread}[5]
-% \begin{itemize}
-%   \item Odin Allfather
-%   \item Thor Thunderer
-%   \item Loki Trickster
-%   \item Freyja Vanir Goddess
-%   \item Tyr God of War
-%   \item Baldr Shining One
-%   \item Heimdall Watchman
-%   \item Njord Sea Deity
-%   \item Skadi Winter Huntress
-%   \item Hel Ruler of the Dead
-% \end{itemize}
-% \end{columnspread}
-% \end{columnspreaddemo}
-%
-% \begin{columnspreaddemo}
-% \begin{columnspread}[5]
-% \begin{itemize}
-%   \item Alpha
-%   \item Beta
-%   \item Gamma
-%   \item Delta
-%   \item Epsilon
-%   \item Zeta
-%   \item Eta
-%   \item Theta
-%   \item Iota
-%   \item Kappa
-% \end{itemize}
-% \end{columnspread}
-% \end{columnspreaddemo}
-%
-% \begin{columnspreaddemo}
-% \begin{columnspread}[5]
-%   \begin{itemize}
-%     \item Alpha
-%     \item Beta
-%     \item Gamma
-%   \end{itemize}
-% \end{columnspread}
-% \end{columnspreaddemo}
-%
-% A second optional argument acts as a key.  Lists sharing the same key also
-% share their column history:
-%
-% \begin{verbatim}
-% \begin{columnspread}[4][Planets]
-%   \begin{choices} ... \end{choices}
-%   \begin{choices} ... \end{choices}
-% \end{columnspread}
-% \end{verbatim}
-%
-% \begin{columnspreaddemo}
-% \begin{columnspread}[4][Planets]
-%   \begin{choices}
-%     \choice Mercury
-%     \choice Venus
-%     \choice Earth
-%     \choice Mars
-%   \end{choices}
-%   \begin{choices}
-%     \choice Jupiter
-%     \choice Saturn
-%     \choice Uranus
-%     \choice Neptune
-%   \end{choices}
-% \end{columnspread}
-% \end{columnspreaddemo}
-%
-% When no key is supplied the package generates a unique identifier of the
-% form \verb|auto-<number>|.  The columns are increased gradually up to the
-% configured maximum when all items fit, and reduced (and locked) whenever an
-% item breaks across a column or page boundary.
-%
-% Only the first list level inside \env{columnspread} is affected.  Nested
-% lists remain single column, which keeps the implementation compatible with
-% packages such as \pkg{enumitem}.
-%
-% \subsection{Practical guidance}
-%
-% \begin{itemize}
-%   \item \textbf{Compilation.} Because the column counts are stored in the
-%     auxiliary file, run \LaTeX\ twice after making significant edits.  The
-%     package issues a friendly warning if another pass is needed.
-%   \item \textbf{Floats.} Placing floats (figures or tables) inside a balanced
-%     list is discouraged.  \textsf{columnspread} detects the situation and
-%     warns, but lets the document compile in case the author is satisfied with
-%     the result.
-%   \item \textbf{Verbatim content.} Environments that alter paragraph building
-%     heavily---\texttt{verbatim}, \pkg{minted}, \pkg{listings}---may confuse
-%     the heuristic that detects broken items.  Where possible, move them
-%     outside the \env{columnspread} block.
-% \end{itemize}
-%
-% \section{Examples}
-%
-% The following examples mirror the demo document distributed with the package.
-% They may be copied verbatim into a document after
-% \verb|\usepackage[defaults=exam]{columnspread}|.
-%
-% \subsection*{Itemize}
-%
-% \begin{verbatim}
-% \begin{columnspread}[5]
-% \begin{itemize}
-%   \item Alpha
-%   \item Beta
-%   \item Gamma
-%   \item Delta
-%   \item Epsilon
-%   \item Zeta
-%   \item Eta
-%   \item Theta
-%   \item Iota
-%   \item Kappa
-% \end{itemize}
-% \end{columnspread}
-% \end{verbatim}
-%
-% \begin{columnspreaddemo}
-% \begin{columnspread}[5]
-% \begin{itemize}
-%   \item Odin Allfather
-%   \item Thor Thunderer
-%   \item Loki Trickster
-%   \item Freyja Vanir Goddess
-%   \item Tyr God of War
-%   \item Baldr Shining One
-%   \item Heimdall Watchman
-%   \item Njord Sea Deity
-%   \item Skadi Winter Huntress
-%   \item Hel Ruler of the Dead
-% \end{itemize}
-% \end{columnspread}
-% \end{columnspreaddemo}
-%
-% \begin{columnspreaddemo}
-% \begin{columnspread}[5]
-% \begin{itemize}
-%   \item Alpha
-%   \item Beta
-%   \item Gamma
-%   \item Delta
-%   \item Epsilon
-%   \item Zeta
-%   \item Eta
-%   \item Theta
-%   \item Iota
-%   \item Kappa
-% \end{itemize}
-% \end{columnspread}
-% \end{columnspreaddemo}
-%
-% \begin{verbatim}
-% \begin{columnspread}[5]
-% \begin{itemize}
-%   \item Odin Allfather
-%   \item Thor Thunderer
-%   \item Loki Trickster
-%   \item Freyja Vanir Goddess
-%   \item Tyr God of War
-%   \item Baldr Shining One
-%   \item Heimdall Watchman
-%   \item Njord Sea Deity
-%   \item Skadi Winter Huntress
-%   \item Hel Ruler of the Dead
-% \end{itemize}
-% \end{columnspread}
-% \end{verbatim}
-%
-% \subsection*{Enumerate}
-%
-% Replace the \env{itemize} environment with \env{enumerate} to balance numbered
-% lists.  The column adjustment works the same as in the previous example.
-%
-% \subsection*{Exam checkboxes}
-%
-% \begin{verbatim}
-% \begin{questions}
-% \question Which animal is known as the ``King of the Jungle''?
-%
-% \begin{columnspread}[5]
-% \begin{checkboxes}
-%   \CorrectChoice Lion
-%   \choice Tiger
-%   \choice Elephant
-%   \choice Giraffe
-%   \choice Zebra
-%   \choice Cheetah
-%   \choice Gorilla
-%   \choice Hyena
-%   \choice Leopard
-%   \choice Rhino
-% \end{checkboxes}
-% \end{columnspread}
-% \end{questions}
-% \end{verbatim}
-%
-% \begin{columnspreaddemo}
-% \begin{questions}
-% \question Which animal is known as the ``King of the Jungle''?
-%
-% \begin{columnspread}[5]
-% \begin{checkboxes}
-%   \CorrectChoice Lion
-%   \choice Tiger
-%   \choice Elephant
-%   \choice Giraffe
-%   \choice Zebra
-%   \choice Cheetah
-%   \choice Gorilla
-%   \choice Hyena
-%   \choice Leopard
-%   \choice Rhino
-% \end{checkboxes}
-% \end{columnspread}
-% \end{questions}
-% \end{columnspreaddemo}
-%
-%
-% \subsection*{Shared keys}
-%
-% \begin{verbatim}
-% \begin{columnspread}[4][Q1]
-% \begin{choices}
-%   \choice Mercury
-%   \choice Venus
-%   \choice Earth
-%   \choice Mars
-%   \choice Jupiter
-%   \choice Saturn
-% \end{choices}
-% \begin{choices}
-%   \choice Uranus
-%   \choice Neptune
-%   \choice Pluto
-%   \choice Haumea
-%   \choice Eris
-%   \choice Ceres
-% \end{choices}
-% \end{columnspread}
-% \end{verbatim}
-%
-% \begin{columnspreaddemo}
-% \begin{columnspread}[5][Q1]
-% \begin{choices}
-%   \choice Mercury
-%   \choice Venus
-%   \choice Earth
-%   \choice Mars
-%   \choice Jupiter
-%   \choice Saturn
-% \end{choices}
-% \begin{choices}
-%   \choice Uranus
-%   \choice Neptune
-%   \choice Pluto
-%   \choice Haumea
-%   \choice Eris
-%   \choice Ceres
-% \end{choices}
-% \end{columnspread}
-% \end{columnspreaddemo}
-%
-% % Warning demo (optional for end users)
-% \begin{verbatim}
-% % \begin{columnspread}[2]
-% % \begin{itemize}
-% %   \item This item wraps a figure float to trigger the warning.
-% %     \begin{figure}[h]
-% %       \centering
-% %       \rule{2cm}{2cm}
-% %       \caption{Float inside columnspread (demo)}
-% %     \end{figure}
-% % \end{itemize}
-% % \end{columnspread}
-% \end{verbatim}
-%
-% \subsection*{Descriptions}
-%
-% \begin{verbatim}
-% \begin{columnspread}[3]
-% \begin{description}
-%   \item[Apple] A sweet red fruit.
-%   \item[Banana] A long yellow fruit.
-%   \item[Cherry] A small red fruit.
-%   \item[Date] A sweet brown fruit.
-%   \item[Elderberry] A small dark fruit.
-%   \item[Fig] A pear-shaped fruit.
-%   \item[Grape] A small round fruit.
-%   \item[Honeydew] A sweet green melon.
-% \end{description}
-% \end{columnspread}
-% \end{verbatim}
-%
-% \begin{columnspreaddemo}
-% \begin{columnspread}[3]
-% \begin{description}
-%   \item[Apple] A sweet red fruit.
-%   \item[Banana] A long yellow fruit.
-%   \item[Cherry] A small red fruit.
-%   \item[Date] A sweet brown fruit.
-%   \item[Elderberry] A small dark fruit.
-%   \item[Fig] A pear-shaped fruit.
-%   \item[Grape] A small round fruit.
-%   \item[Honeydew] A sweet green melon.
-% \end{description}
-% \end{columnspread}
-% \end{columnspreaddemo}
-%
-% \subsection*{tcolorbox integration}
-%
-% \begin{verbatim}
-% \begin{columnspread}[5]
-% \begin{tcbitemize}[size=fbox]
-%   \tcbitem Argentina
-%   \tcbitem Brazil
-%   \tcbitem Chile
-%   \tcbitem Denmark
-%   \tcbitem Ecuador
-%   \tcbitem France
-%   \tcbitem The People's Democratic Republic of Algeria
-% \end{tcbitemize}
-% \end{columnspread}
-% \end{verbatim}
-%
-% \begin{columnspreaddemo}
-% \begin{columnspread}[5]
-% \begin{tcbitemize}[size=fbox]
-%   \tcbitem Argentina
-%   \tcbitem Brazil
-%   \tcbitem Chile
-%   \tcbitem Denmark
-%   \tcbitem Ecuador
-%   \tcbitem France
-%   \tcbitem The People's Democratic Republic of Algeria
-% \end{tcbitemize}
-% \end{columnspread}
-% \end{columnspreaddemo}
-%
-% \StopEventually{\PrintChanges\PrintIndex}
-%
-% \section{Implementation}
-%
-% The implementation closely follows the exploratory code that powered the
-% original demo document.
 %
 %<*package>
 %    \begin{macrocode}
