@@ -70,37 +70,13 @@
   \edef\WI@currentkey{auto-\the\WI@listcounter}%
 }
 
-\newcommand\warnmulticolreset[1]{%
-  \WI@definecols{#1}{1}%
-  \WI@definelock{#1}{0}%
-  \WI@writecols{#1}{1}%
-  \WI@writelock{#1}{0}%
-}
-
-\newcount\WI@activecount
 \newif\ifWI@active
 \WI@activefalse
-
-\newcommand\WI@activate{%
-  \global\advance\WI@activecount\@ne
-  \global\WI@activetrue
-  \global\WI@brokefalse
-  \WI@pendingfalse
-}
-
-\newcommand\WI@deactivate{%
-  \WI@checkpending
-  \global\advance\WI@activecount\m@ne
-  \ifnum\WI@activecount>0\relax
-  \else
-    \global\WI@activefalse
-  \fi
-}
 
 \newcommand\WI@maybeWarn@[1]{%
   \ifnum#1>1
     \global\WI@broketrue
-    \PackageWarning{warnitemize}{A list item broke across #1 lines}%
+    \PackageWarning{columnspread}{A list item broke across #1 lines}%
   \fi
   \WI@pendingfalse
 }
@@ -122,17 +98,16 @@
 \AddToHook{para/after}{\WI@checkpending}
 \AddToHook{cmd/item/before}{\WI@armpending}
 
-\newenvironment{warnitemize}
-  {\WI@activate\begin{itemize}}
-  {\end{itemize}\WI@deactivate}
-
 \AtEndDocument{%
   \ifWI@rerun
-    \PackageWarningNoLine{warnitemize}{List columns expanded; rerun LaTeX}%
+    \PackageWarningNoLine{columnspread}{List columns expanded; rerun LaTeX}%
   \fi
 }
 
 \newcommand\WI@startcolumns[1]{%
+    \global\WI@activetrue
+    \global\WI@brokefalse
+    \WI@pendingfalse
     \WI@maxcolumns=#1\relax
     \ifnum\WI@maxcolumns<1 \WI@maxcolumns=1\fi
     \WI@lockedfalse
@@ -198,75 +173,12 @@
       \fi
     \fi
     \WI@starfalse
+    \global\WI@activefalse
 }
-
-\NewDocumentEnvironment{warnmulticol}{O{\WI@defaultmaxcols} o}
-  {%
-    \WI@starfalse
-    \IfNoValueTF{#2}{\WI@generatekey}{\def\WI@currentkey{#2}}%
-    \WI@activate
-    \WI@startcolumns{#1}%
-  }
-  {%
-    \WI@endcolumns
-    \WI@deactivate
-  }
-
-\NewDocumentEnvironment{warnmulticol*}{O{\WI@defaultmaxcols} o}
-  {%
-    \WI@startrue
-    \IfNoValueTF{#2}{\WI@generatekey}{\def\WI@currentkey{#2}}%
-    \WI@activate
-    \WI@startcolumns{#1}%
-  }
-  {%
-    \WI@endcolumns
-    \WI@deactivate
-  }
-
-\NewDocumentEnvironment{warnmulticolenumerate}{O{\WI@defaultmaxcols} o}
-  {%
-    \IfNoValueTF{#2}{\begin{warnmulticol}[#1]}{\begin{warnmulticol}[#1][#2]}%
-    \begin{enumerate}%
-  }
-  {%
-    \end{enumerate}%
-    \end{warnmulticol}%
-  }
-
-\NewDocumentEnvironment{warnmulticolenumerate*}{O{\WI@defaultmaxcols} o}
-  {%
-    \IfNoValueTF{#2}{\begin{warnmulticol*}[#1]}{\begin{warnmulticol*}[#1][#2]}%
-    \begin{enumerate}%
-  }
-  {%
-    \end{enumerate}%
-    \end{warnmulticol*}%
-  }
-
-\NewDocumentEnvironment{warnmulticolcheckboxes}{O{\WI@defaultmaxcols} o}
-  {%
-    \IfNoValueTF{#2}{\begin{warnmulticol}[#1]}{\begin{warnmulticol}[#1][#2]}%
-    \begin{checkboxes}%
-  }
-  {%
-    \end{checkboxes}%
-    \end{warnmulticol}%
-  }
-
-\NewDocumentEnvironment{warnmulticolcheckboxes*}{O{\WI@defaultmaxcols} o}
-  {%
-    \IfNoValueTF{#2}{\begin{warnmulticol*}[#1]}{\begin{warnmulticol*}[#1][#2]}%
-    \begin{checkboxes}%
-  }
-  {%
-    \end{checkboxes}%
-    \end{warnmulticol*}%
-  }
 
 \newcommand\WI@columnspread@begin[2]{%
   \ifWI@columnspread
-    \PackageError{warnitemize}{Nested columnspread environments are unsupported}{%
+    \PackageError{columnspread}{Nested columnspread environments are unsupported}{%
       Close the surrounding columnspread environment before starting another.%
     }%
   \fi
@@ -286,7 +198,6 @@
   \ifWI@columnspread
     \ifnum\WI@columnspreaddepth>0\relax
       \WI@endcolumns
-      \WI@deactivate
     \fi
     \WI@columnspreadfalse
     \WI@columnspreadstarfalse
@@ -311,7 +222,6 @@
       \else
         \WI@starfalse
       \fi
-      \WI@activate
       \WI@startcolumns{\WI@columnspreadcols}%
     \fi
   \fi
@@ -322,7 +232,6 @@
     \ifnum\WI@columnspreaddepth>0\relax
       \ifnum\WI@columnspreaddepth=\@ne
         \WI@endcolumns
-        \WI@deactivate
       \fi
       \advance\WI@columnspreaddepth\m@ne
     \fi
@@ -474,5 +383,22 @@ It also works with exam checkboxes:
 \end{columnspread}
 
 \end{questions}
+
+\subsection{Descriptions}
+
+This environment is not patched by default, but can be used manually:
+
+\begin{columnspread}[3]
+\begin{description}
+  \item[Apple] A sweet red fruit.
+  \item[Banana] A long yellow fruit.
+  \item[Cherry] A small red fruit.
+  \item[Date] A sweet brown fruit.
+  \item[Elderberry] A small dark fruit.
+  \item[Fig] A pear-shaped fruit.
+  \item[Grape] A small round fruit.
+  \item[Honeydew] A sweet green melon.
+\end{description}
+\end{columnspread}
 
 \end{document}
