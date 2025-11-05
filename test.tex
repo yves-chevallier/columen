@@ -1,5 +1,6 @@
 \documentclass{exam}
 
+\usepackage{parskip}
 \usepackage{multicol}
 \usepackage{xparse}
 \usepackage{etoolbox}
@@ -223,26 +224,6 @@
     \WI@deactivate
   }
 
-\NewDocumentEnvironment{warnmulticolitemize}{O{\WI@defaultmaxcols} o}
-  {%
-    \IfNoValueTF{#2}{\begin{warnmulticol}[#1]}{\begin{warnmulticol}[#1][#2]}%
-    \begin{itemize}%
-  }
-  {%
-    \end{itemize}%
-    \end{warnmulticol}%
-  }
-
-\NewDocumentEnvironment{warnmulticolitemize*}{O{\WI@defaultmaxcols} o}
-  {%
-    \IfNoValueTF{#2}{\begin{warnmulticol*}[#1]}{\begin{warnmulticol*}[#1][#2]}%
-    \begin{itemize}%
-  }
-  {%
-    \end{itemize}%
-    \end{warnmulticol*}%
-  }
-
 \NewDocumentEnvironment{warnmulticolenumerate}{O{\WI@defaultmaxcols} o}
   {%
     \IfNoValueTF{#2}{\begin{warnmulticol}[#1]}{\begin{warnmulticol}[#1][#2]}%
@@ -390,9 +371,11 @@ the effect.
 
 The goal is to make this demo work with most itemize-like environments, including:
 
-- itemize
-- enumerate
-- exam checkboxes
+\begin{itemize}
+\item itemize
+\item enumerate
+\item exam checkboxes
+\end{itemize}
 
 \section{Examples}
 
@@ -400,7 +383,8 @@ The goal is to make this demo work with most itemize-like environments, includin
 
 With fairly short items, we can fit in more columns:
 
-\begin{warnmulticolitemize}[5]
+\begin{columnspread}[5]
+\begin{itemize}
   \item Alpha
   \item Beta
   \item Gamma
@@ -411,11 +395,13 @@ With fairly short items, we can fit in more columns:
   \item Theta
   \item Iota
   \item Kappa
-\end{warnmulticolitemize}
+\end{itemize}
+\end{columnspread}
 
 With longer items, fewer columns are used to avoid breaking items:
 
-\begin{warnmulticolitemize}[5]
+\begin{columnspread}[5]
+\begin{itemize}
     \item Odin Allfather
     \item Thor Thunderer
     \item Loki Trickster
@@ -426,12 +412,15 @@ With longer items, fewer columns are used to avoid breaking items:
     \item Njord Sea Deity
     \item Skadi Winter Huntress
     \item Hel Ruler of the Dead
-\end{warnmulticolitemize}
+\end{itemize}
+\end{columnspread}
 
-The goals would be to keep using the standard itemize environment, and to use etoolbox-like patching to monkey-patch the logic into it.
+\subsection{Enumerate}
+
+It also works with enumerate:
 
 \begin{columnspread}[5]
-\begin{itemize}
+\begin{enumerate}
   \item Alpha
   \item Beta
   \item Gamma
@@ -442,11 +431,13 @@ The goals would be to keep using the standard itemize environment, and to use et
   \item Theta
   \item Iota
   \item Kappa
-\end{itemize}
+\end{enumerate}
 \end{columnspread}
 
+Same demo with longer items:
+
 \begin{columnspread}[5]
-\begin{itemize}
+\begin{enumerate}
     \item Odin Allfather
     \item Thor Thunderer
     \item Loki Trickster
@@ -457,7 +448,31 @@ The goals would be to keep using the standard itemize environment, and to use et
     \item Njord Sea Deity
     \item Skadi Winter Huntress
     \item Hel Ruler of the Dead
-\end{itemize}
+\end{enumerate}
 \end{columnspread}
+
+\subsection{Exam Checkboxes}
+
+It also works with exam checkboxes:
+
+\begin{questions}
+\question Which animal is known as the "King of the Jungle"?
+
+\begin{columnspread}[5]
+\begin{checkboxes}
+  \CorrectChoice Lion
+  \choice Tiger
+  \choice Elephant
+  \choice Giraffe
+  \choice Zebra
+  \choice Cheetah
+  \choice Gorilla
+  \choice Hyena
+  \choice Leopard
+  \choice Rhino
+\end{checkboxes}
+\end{columnspread}
+
+\end{questions}
 
 \end{document}
