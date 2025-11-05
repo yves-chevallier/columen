@@ -36,6 +36,18 @@
 \newcommand\WI@columnspreadcols{\WI@defaultmaxcols}
 \newcommand\WI@columnspreadkey{}
 
+\newif\ifWI@usetcbitemize
+\newif\ifWI@hadtcbcolumns
+\newif\ifWI@tcbitemfirst
+\WI@usetcbitemizefalse
+\WI@hadtcbcolumnsfalse
+\WI@tcbitemfirsttrue
+\let\WI@oldtcbcolumns\relax
+\newbox\WI@tcb@box
+\newdimen\WI@tcb@baseline
+\newdimen\WI@tcb@height
+\newdimen\WI@tcb@diff
+
 \newcommand\WI@getcols[1]{%
   \@ifundefined{WI@cols@#1}{1}{\csname WI@cols@#1\endcsname}%
 }
@@ -109,6 +121,7 @@
     \global\WI@activetrue
     \global\WI@brokefalse
     \WI@pendingfalse
+    \WI@hadtcbcolumnsfalse
     \WI@maxcolumns=#1\relax
     \ifnum\WI@maxcolumns<1 \WI@maxcolumns=1\fi
     \WI@lockedfalse
@@ -123,6 +136,16 @@
       \fi
       \ifnum\WI@getlock{\WI@currentkey}>0\relax
         \WI@lockedtrue
+      \fi
+    \fi
+    \ifWI@usetcbitemize
+      \WI@usemulticolsfalse
+      \WI@hadtcbcolumnstrue
+      \let\WI@oldtcbcolumns\kvtcb@raster@columns
+      \edef\kvtcb@raster@columns{\the\WI@columncount}%
+    \else
+      \ifnum\WI@columncount=1
+        \WI@usemulticolsfalse
       \fi
     \fi
     \ifnum\WI@columncount=1
@@ -171,6 +194,12 @@
         \WI@writelock{\WI@currentkey}{1}%
       \else
         \WI@writelock{\WI@currentkey}{0}%
+      \fi
+    \fi
+    \ifWI@usetcbitemize
+      \ifWI@hadtcbcolumns
+        \let\kvtcb@raster@columns\WI@oldtcbcolumns
+        \WI@hadtcbcolumnsfalse
       \fi
     \fi
     \WI@starfalse
@@ -268,6 +297,77 @@
 \WI@columnspread@maybe{enumerate}
 \WI@columnspread@maybe{checkboxes}
 \WI@columnspread@maybe{description}
+
+\newcommand\WI@tcbitem@prepare{%
+  \ifWI@usetcbitemize
+    \WI@pendingtrue
+    \global\WI@tcbitemfirstfalse
+  \fi
+}
+
+\newcommand\WI@tcbitem@finalize{%
+  \ifWI@usetcbitemize
+    \ifWI@tcbitemfirst
+      % nothing yet
+    \else
+      \ifvmode
+        \setbox\WI@tcb@box=\lastbox
+        \ifvoid\WI@tcb@box
+          % nothing to measure
+        \else
+          \WI@tcb@height=\ht\WI@tcb@box
+          \advance\WI@tcb@height\dp\WI@tcb@box
+          \ifdim\WI@tcb@baseline=0pt
+            \WI@tcb@baseline=\WI@tcb@height
+          \else
+            \ifdim\WI@tcb@height<\WI@tcb@baseline
+              \WI@tcb@baseline=\WI@tcb@height
+            \fi
+          \fi
+          \WI@tcb@diff=\WI@tcb@height
+          \advance\WI@tcb@diff-\WI@tcb@baseline
+          \ifdim\WI@tcb@diff>\baselineskip
+            \WI@maybeWarn@{2}%
+          \else
+            \WI@maybeWarn@{1}%
+          \fi
+          \box\WI@tcb@box
+        \fi
+      \fi
+    \fi
+  \fi
+}
+
+\BeforeBeginEnvironment{tcbitemize}{%
+  \ifWI@columnspread
+    \WI@usetcbitemizetrue
+    \WI@columnspread@before
+    \WI@tcbitemfirsttrue
+    \WI@tcb@baseline=0pt
+  \else
+    \WI@usetcbitemizefalse
+  \fi
+}
+\AfterEndEnvironment{tcbitemize}{%
+  \ifWI@usetcbitemize
+    \WI@tcbitem@finalize
+    \WI@columnspread@after
+    \WI@usetcbitemizefalse
+  \fi
+}
+
+\renewcommand{\tcbitem@first}[1][]{%
+  \WI@tcbitem@prepare
+  \let\tcbitem=\tcbitem@following
+  \begin{tcolorbox}[{#1}]%
+}
+
+\renewcommand{\tcbitem@following}[1][]{%
+  \end{tcolorbox}%
+  \WI@tcbitem@finalize
+  \WI@tcbitem@prepare
+  \begin{tcolorbox}[{#1}]%
+}
 
 \makeatother
 
@@ -403,20 +503,20 @@ It also works with description lists:
 \end{description}
 \end{columnspread}
 
-\subsection{TCP Itemize}
+\subsection{TCB Itemize}
 
-\begin{minipage}{\linewidth}%
-    \begin{tcbitemize}[size=fbox,sharp corners,
-        colframe=black,colback=white,boxrule=1.0pt,
-        raster equal height,raster force size=false,
-        raster equal skip=0pt,raster column skip=2mm,raster columns=3]
-        \tcbitem[width=0.3\linewidth]
-            A
-        \tcbitem[width=0.3\linewidth]
-            B
-        \tcbitem[width=0.3\linewidth]
-            C
-    \end{tcbitemize}%
-\end{minipage}
+\begin{columnspread}[5]
+\begin{tcbitemize}[size=fbox]
+    \tcbitem Argentina
+    \tcbitem Brazil
+    \tcbitem Chile
+    \tcbitem Denmark
+    \tcbitem Ecuador
+    \tcbitem France
+    \tcbitem Republic of Gabon
+    %\tcbitem The People's Democratic Republic of Algeria
+\end{tcbitemize}
+\end{columnspread}
+
 
 \end{document}
