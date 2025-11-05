@@ -5,7 +5,6 @@
 
 \makeatletter
 \newif\ifWI@pending
-\newif\ifWI@nested
 \newif\ifWI@broke
 \newif\ifWI@rerun
 \newif\ifWI@usemulticols
@@ -63,55 +62,60 @@
   \WI@writelock{#1}{0}%
 }
 
-\AtEndDocument{%
-  \ifWI@rerun
-    \PackageWarningNoLine{warnitemize}{List columns expanded; rerun LaTeX}%
+\newcount\WI@activecount
+\newif\ifWI@active
+\WI@activefalse
+
+\newcommand\WI@activate{%
+  \global\advance\WI@activecount\@ne
+  \global\WI@activetrue
+  \global\WI@brokefalse
+  \WI@pendingfalse
+}
+
+\newcommand\WI@deactivate{%
+  \WI@checkpending
+  \global\advance\WI@activecount\m@ne
+  \ifnum\WI@activecount>0\relax
+  \else
+    \global\WI@activefalse
   \fi
 }
 
-\newcommand\WI@maybeWarn{%
-  \ifWI@pending
-    \expandafter\WI@maybeWarn@\expandafter{\the\prevgraf}%
-    \WI@pendingfalse
-  \fi
-}
 \newcommand\WI@maybeWarn@[1]{%
   \ifnum#1>1
     \global\WI@broketrue
     \PackageWarning{warnitemize}{A list item broke across #1 lines}%
   \fi
+  \WI@pendingfalse
 }
 
-\newcommand\WI@ensurehooks{%
-  \ifWI@nested
-  \else
-    % 1) each \item arms the flag
-    \let\WI@origitem\item
-    \def\item{\WI@pendingtrue\WI@origitem}%
-    % 2) hook: end of an item's paragraph
-    \edef\@@par{\unexpanded\expandafter{\@@par\WI@maybeWarn}}%
-    \WI@nestedtrue
+\newcommand\WI@checkpending{%
+  \ifWI@active
+    \ifWI@pending
+      \expandafter\WI@maybeWarn@\expandafter{\the\prevgraf}%
+    \fi
   \fi
 }
 
-\newcommand\WI@beginmonitoredlist{%
-  \global\WI@brokefalse
-  \WI@ensurehooks
+\newcommand\WI@armpending{%
+  \ifWI@active
+    \WI@pendingtrue
+  \fi
 }
 
-\newcommand\WI@endmonitoredlist{%
-  \WI@maybeWarn
-}
+\AddToHook{para/after}{\WI@checkpending}
+\AddToHook{cmd/item/before}{\WI@armpending}
 
 \newenvironment{warnitemize}
-  {%
-    \WI@beginmonitoredlist
-    \begin{itemize}%
-  }
-  {%
-    \WI@endmonitoredlist
-    \end{itemize}%
-  }
+  {\WI@activate\begin{itemize}}
+  {\end{itemize}\WI@deactivate}
+
+\AtEndDocument{%
+  \ifWI@rerun
+    \PackageWarningNoLine{warnitemize}{List columns expanded; rerun LaTeX}%
+  \fi
+}
 
 \newcommand\WI@startcolumns[1]{%
     \WI@maxcolumns=#1\relax
@@ -143,6 +147,7 @@
 }
 
 \newcommand\WI@endcolumns{%
+    \WI@checkpending
     \ifWI@usemulticols
       \ifWI@star
         \end{multicols*}%
@@ -184,24 +189,24 @@
   {%
     \WI@starfalse
     \IfNoValueTF{#2}{\WI@generatekey}{\def\WI@currentkey{#2}}%
+    \WI@activate
     \WI@startcolumns{#1}%
-    \WI@beginmonitoredlist
   }
   {%
-    \WI@endmonitoredlist
     \WI@endcolumns
+    \WI@deactivate
   }
 
 \NewDocumentEnvironment{warnmulticol*}{O{\WI@defaultmaxcols} o}
   {%
     \WI@startrue
     \IfNoValueTF{#2}{\WI@generatekey}{\def\WI@currentkey{#2}}%
+    \WI@activate
     \WI@startcolumns{#1}%
-    \WI@beginmonitoredlist
   }
   {%
-    \WI@endmonitoredlist
     \WI@endcolumns
+    \WI@deactivate
   }
 
 \NewDocumentEnvironment{warnmulticolitemize}{O{\WI@defaultmaxcols} o}
@@ -224,6 +229,46 @@
     \end{warnmulticol*}%
   }
 
+\NewDocumentEnvironment{warnmulticolenumerate}{O{\WI@defaultmaxcols} o}
+  {%
+    \IfNoValueTF{#2}{\begin{warnmulticol}[#1]}{\begin{warnmulticol}[#1][#2]}%
+    \begin{enumerate}%
+  }
+  {%
+    \end{enumerate}%
+    \end{warnmulticol}%
+  }
+
+\NewDocumentEnvironment{warnmulticolenumerate*}{O{\WI@defaultmaxcols} o}
+  {%
+    \IfNoValueTF{#2}{\begin{warnmulticol*}[#1]}{\begin{warnmulticol*}[#1][#2]}%
+    \begin{enumerate}%
+  }
+  {%
+    \end{enumerate}%
+    \end{warnmulticol*}%
+  }
+
+\NewDocumentEnvironment{warnmulticolcheckboxes}{O{\WI@defaultmaxcols} o}
+  {%
+    \IfNoValueTF{#2}{\begin{warnmulticol}[#1]}{\begin{warnmulticol}[#1][#2]}%
+    \begin{checkboxes}%
+  }
+  {%
+    \end{checkboxes}%
+    \end{warnmulticol}%
+  }
+
+\NewDocumentEnvironment{warnmulticolcheckboxes*}{O{\WI@defaultmaxcols} o}
+  {%
+    \IfNoValueTF{#2}{\begin{warnmulticol*}[#1]}{\begin{warnmulticol*}[#1][#2]}%
+    \begin{checkboxes}%
+  }
+  {%
+    \end{checkboxes}%
+    \end{warnmulticol*}%
+  }
+
 \makeatother
 
 \begin{document}
@@ -243,7 +288,7 @@ euismod orci ac vulputate. Nam tempor arcu ex.
 
 \subsection*{Automatic widening to five columns}
 \begin{warnmulticolitemize}[5]
-  \item Alpha Bravo
+  \item Alpha Bravo Chocolat violet
   \item Beta
   \item Gamma
   \item Delta
@@ -269,7 +314,13 @@ euismod orci ac vulputate. Nam tempor arcu ex.
 \subsection*{Exam checkboxes}
 \begin{warnmulticol}[4]
   \begin{checkboxes}
-    \choice Option alpha with a little extra
+    \choice Option alpha
+    \choice Option beta
+    \choice Option gamma
+    \choice Option delta
+    \choice Option epsilon
+    \choice Option zeta
+    \choice Option eta
     \choice Option beta
     \choice Option gamma
     \choice Option delta
