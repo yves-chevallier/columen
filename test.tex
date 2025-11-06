@@ -2,7 +2,7 @@
 
 \usepackage{parskip}
 \usepackage[most]{tcolorbox}
-\usepackage[defaults=exam]{columnspread}
+\usepackage[defaults=exam]{columen}
 
 \begin{document}
 
@@ -27,42 +27,42 @@ The goal is to make this demo work with most itemize-like environments, includin
 \fbox{%
 \centering
   \begin{minipage}[t]{8cm}
-\begin{columnspread}[5]
+\begin{columen}[5]
 \begin{itemize}
   \item Lorem ipsum dolor sit amet
   \item Sed sed metus arcu
   \item Donec semper lorem nisi
   \item Aenean augue justo
 \end{itemize}
-\end{columnspread}
+\end{columen}
   \end{minipage}%
 }
 
 \fbox{%
 \centering
   \begin{minipage}[t]{12cm}
-\begin{columnspread}[5]
+\begin{columen}[5]
 \begin{itemize}
   \item Lorem ipsum do
   \item Sed sed metus ar
   \item Donec semper lor
   \item Aenean augue jus
 \end{itemize}
-\end{columnspread}
+\end{columen}
   \end{minipage}%
 }
 
 \fbox{%
 \centering
   \begin{minipage}[t]{\textwidth}
-\begin{columnspread}[5]
+\begin{columen}[5]
 \begin{itemize}
   \item Lorem ipsum do
   \item Sed sed metus ar
   \item Donec semper lor
   \item Aenean augue jus
 \end{itemize}
-\end{columnspread}
+\end{columen}
   \end{minipage}%
 }
 
@@ -73,7 +73,7 @@ The goal is to make this demo work with most itemize-like environments, includin
 
 With fairly short items, we can fit in more columns:
 
-\begin{columnspread}[5]
+\begin{columen}[5]
 \begin{itemize}
   \item Alpha
   \item Beta
@@ -86,11 +86,11 @@ With fairly short items, we can fit in more columns:
   \item Iota
   \item Kappa
 \end{itemize}
-\end{columnspread}
+\end{columen}
 
 With longer items, fewer columns are used to avoid breaking items:
 
-\begin{columnspread}[5]
+\begin{columen}[5]
 \begin{itemize}
     \item Odin Allfather
     \item Thor Thunderer
@@ -103,13 +103,13 @@ With longer items, fewer columns are used to avoid breaking items:
     \item Skadi Winter Huntress
     \item Hel Ruler of the Dead
 \end{itemize}
-\end{columnspread}
+\end{columen}
 
 \subsection{Enumerate}
 
 It also works with enumerate:
 
-\begin{columnspread}[5]
+\begin{columen}[5]
 \begin{enumerate}
   \item Alpha
   \item Beta
@@ -122,11 +122,11 @@ It also works with enumerate:
   \item Iota
   \item Kappa
 \end{enumerate}
-\end{columnspread}
+\end{columen}
 
 Same demo with longer items:
 
-\begin{columnspread}[5]
+\begin{columen}[5]
 \begin{enumerate}
     \item Odin Allfather
     \item Thor Thunderer
@@ -139,7 +139,7 @@ Same demo with longer items:
     \item Skadi Winter Huntress
     \item Hel Ruler of the Dead
 \end{enumerate}
-\end{columnspread}
+\end{columen}
 
 \subsection{Exam Checkboxes}
 
@@ -148,7 +148,7 @@ It also works with exam checkboxes:
 \begin{questions}
 \question Which animal is known as the ``King of the Jungle''?
 
-\begin{columnspread}[5]
+\begin{columen}[5]
 \begin{checkboxes}
   \CorrectChoice Lion
   \choice Tiger
@@ -161,7 +161,7 @@ It also works with exam checkboxes:
   \choice Leopard
   \choice Rhino
 \end{checkboxes}
-\end{columnspread}
+\end{columen}
 
 \end{questions}
 
@@ -169,7 +169,7 @@ It also works with exam checkboxes:
 
 It also works with description lists:
 
-\begin{columnspread}[3]
+\begin{columen}[3]
 \begin{description}
   \item[Apple] A sweet red fruit.
   \item[Banana] A long yellow fruit.
@@ -180,13 +180,13 @@ It also works with description lists:
   \item[Grape] A small round fruit.
   \item[Honeydew] A sweet green melon.
 \end{description}
-\end{columnspread}
+\end{columen}
 
 \subsection{TCB Itemize from tcolorbox}
 
 We can also use it with tcolorbox's tcbitemize environment:
 
-\begin{columnspread}[5]
+\begin{columen}[5]
 \begin{tcbitemize}[size=fbox]
     \tcbitem Argentina
     \tcbitem Brazil
@@ -196,6 +196,6 @@ We can also use it with tcolorbox's tcbitemize environment:
     \tcbitem France
     \tcbitem The People's Democratic Republic of Algeria
 \end{tcbitemize}
-\end{columnspread}
+\end{columen}
 
 \end{document}

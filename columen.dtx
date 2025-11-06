@@ -1,11 +1,11 @@
 % \iffalse
 %<*driver>
-\ProvidesFile{columnspread.dtx}[2024/06/13 v0.1 Column spread package source]
+\ProvidesFile{columen.dtx}[2024/06/13 v0.1 Columen package source]
 \documentclass{ltxdoc}
 \usepackage[margin=3.5cm]{geometry}
 \usepackage{xcolor}
 \usepackage[most]{tcolorbox}
-\usepackage[defaults=exam]{columnspread}
+\usepackage[defaults=exam]{columen}
 \providecommand{\choice}{\item}
 \providecommand{\CorrectChoice}{\item[\textbf{Correct}]}
 \newenvironment{choices}{\begin{itemize}}{\end{itemize}}
@@ -23,16 +23,16 @@
 \CodelineIndex
 \RecordChanges
 \begin{document}
-\GetFileInfo{columnspread.sty}
+\GetFileInfo{columen.sty}
 
-\title{The \textsf{columnspread} package}
+\title{The \textsf{columen} package}
 \author{Yves Chevallier}
 \date{\filedate\ \fileversion}
 
 \maketitle
 
 \begin{abstract}
-The \textsf{columnspread} package automatically spreads items from list
+The \textsf{columen} package automatically spreads items from list
 environments across multiple columns while keeping whole items in a single
 column.  Column counts are stored in the \texttt{.aux} file, so the document
 converges after at most two recompilations.  The package works with
@@ -44,7 +44,7 @@ converges after at most two recompilations.  The package works with
 \tableofcontents
 
 \providecommand*{\env}[1]{\texttt{#1}}
-\newenvironment{columnspreaddemo}{%
+\newenvironment{columendemo}{%
   \par\smallskip
   \noindent\textbf{Result:}\par\smallskip
 }{%
@@ -59,7 +59,7 @@ containing lists of short items.  When those lists are laid out in several
 columns the page count drops, yet manually balancing the content soon becomes
 tedious.
 
-The \textsf{columnspread} package automates this balancing act:
+The \textsf{columen} package automates this balancing act:
 for every registered list environment it remembers how many columns were
 required without breaking an item, and it restores that configuration on the
 next run. Column counts are persisted via the auxiliary file, so the workflow
@@ -70,11 +70,11 @@ column count.
 \subsection{Loading the package}
 The package can be loaded directly:
 \begin{verbatim}
-\usepackage{columnspread}
+\usepackage{columen}
 \end{verbatim}
 or with a preset that enables several environments at once:
 \begin{verbatim}
-\usepackage[defaults=exam]{columnspread}
+\usepackage[defaults=exam]{columen}
 \end{verbatim}
 The \texttt{defaults=exam} preset expands to
 \begin{verbatim}
@@ -85,19 +85,19 @@ Additional presets may be added in future versions.  Independently of the
 chosen preset, environments can be registered manually at any point in the
 document using the user-level helpers described below.
 \subsection{Registering environments}
-\DescribeMacro{\columnspreadfor}
+\DescribeMacro{\columenfor}
   accepts a comma-separated list of environment names and wires each of them
   into the column balancing machinery.
-\DescribeMacro{\ColumnSpreadPatch}
+\DescribeMacro{\ColumenPatch}
   patches a single environment immediately.  Internally it shares the same
-  implementation as \cs{columnspreadfor}, but the dedicated macro is useful
+  implementation as \cs{columenfor}, but the dedicated macro is useful
   when building bespoke presets in package code.
 The package integrates with \textsf{tcolorbox} automatically: when the
 \pkg{tcolorbox} package is loaded, the \env{tcbitemize} environment behaves
-like any other list registered with \textsf{columnspread}.
+like any other list registered with \textsf{columen}.
 \subsection{Balancing lists}
 Wrap one or several compatible list environments inside the
-\DescribeEnv{columnspread} environment.  The first optional argument sets the
+\DescribeEnv{columen} environment.  The first optional argument sets the
 maximum number of columns; the default is~\texttt{5}.
 
 \clearpage
@@ -107,14 +107,14 @@ maximum number of columns; the default is~\texttt{5}.
 \begin{verbatim}
 \fbox{%
   \begin{minipage}[t]{10cm}
-\begin{columnspread}[5]
+\begin{columen}[5]
 \begin{itemize}
   \item Methyl Alcohol
   \item Hexafluoroethane
   \item Sodium Chloride
   \item Calcium Carbonate
 \end{itemize}
-\end{columnspread}
+\end{columen}
   \end{minipage}%
 }
 \end{verbatim}
@@ -131,14 +131,14 @@ maximum number of columns; the default is~\texttt{5}.
 \fbox{%
 \centering
   \begin{minipage}[t]{8cm}
-\begin{columnspread}[5]
+\begin{columen}[5]
 \begin{itemize}
   \item Lorem ipsum dolor sit amet
   \item Sed sed metus arcu
   \item Donec semper lorem nisi
   \item Aenean augue justo
 \end{itemize}
-\end{columnspread}
+\end{columen}
   \end{minipage}%
 }
 
@@ -156,28 +156,28 @@ maximum number of columns; the default is~\texttt{5}.
 \fbox{%
 \centering
   \begin{minipage}[t]{12cm}
-\begin{columnspread}[5]
+\begin{columen}[5]
 \begin{itemize}
   \item Lorem ipsum do
   \item Sed sed metus ar
   \item Donec semper lor
   \item Aenean augue jus
 \end{itemize}
-\end{columnspread}
+\end{columen}
   \end{minipage}%
 }
 
 \fbox{%
 \centering
   \begin{minipage}[t]{\textwidth}
-\begin{columnspread}[5]
+\begin{columen}[5]
 \begin{itemize}
   \item Lorem ipsum do
   \item Sed sed metus ar
   \item Donec semper lor
   \item Aenean augue jus
 \end{itemize}
-\end{columnspread}
+\end{columen}
   \end{minipage}%
 }
 \endgroup
@@ -185,13 +185,13 @@ maximum number of columns; the default is~\texttt{5}.
 \noindent A second optional argument acts as a key. Lists sharing the same key also
 share their column history:
 \begin{verbatim}
-\begin{columnspread}[4][Planets]
+\begin{columen}[4][Planets]
   \begin{choices} ... \end{choices}
   \begin{choices} ... \end{choices}
-\end{columnspread}
+\end{columen}
 \end{verbatim}
-\begin{columnspreaddemo}
-\begin{columnspread}[4][Planets]
+\begin{columendemo}
+\begin{columen}[4][Planets]
   \begin{choices}
     \choice Mercury
     \choice Venus
@@ -204,14 +204,14 @@ share their column history:
     \choice Uranus
     \choice Neptune
   \end{choices}
-\end{columnspread}
-\end{columnspreaddemo}
+\end{columen}
+\end{columendemo}
 
 When no key is supplied the package generates a unique identifier of the
 form \verb|auto-<number>|.  The columns are increased gradually up to the
 configured maximum when all items fit, and reduced (and locked) whenever an
 item breaks across a column or page boundary.
-Only the first list level inside \env{columnspread} is affected.  Nested
+Only the first list level inside \env{columen} is affected.  Nested
 lists remain single column, which keeps the implementation compatible with
 packages such as \pkg{enumitem}.
 \subsection{Practical guidance}
@@ -220,21 +220,21 @@ packages such as \pkg{enumitem}.
     auxiliary file, run \LaTeX\ twice after making significant edits.  The
     package issues a friendly warning if another pass is needed.
   \item \textbf{Floats.} Placing floats (figures or tables) inside a balanced
-    list is discouraged.  \textsf{columnspread} detects the situation and
+    list is discouraged.  \textsf{columen} detects the situation and
     warns, but lets the document compile in case the author is satisfied with
     the result.
   \item \textbf{Verbatim content.} Environments that alter paragraph building
     heavily -- \texttt{verbatim}, \pkg{minted}, \pkg{listings} -- may confuse
     the heuristic that detects broken items.  Where possible, move them
-    outside the \env{columnspread} block.
+    outside the \env{columen} block.
 \end{itemize}
 \section{Examples}
 The following examples mirror the demo document distributed with the package.
 They may be copied verbatim into a document after
-\verb|\usepackage[defaults=exam]{columnspread}|.
+\verb|\usepackage[defaults=exam]{columen}|.
 \subsection{Itemize}
 \begin{verbatim}
-\begin{columnspread}[5]
+\begin{columen}[5]
 \begin{itemize}
   \item Alpha
   \item Beta
@@ -247,11 +247,11 @@ They may be copied verbatim into a document after
   \item Iota
   \item Kappa
 \end{itemize}
-\end{columnspread}
+\end{columen}
 \end{verbatim}
 
-\begin{columnspreaddemo}
-\begin{columnspread}[5]
+\begin{columendemo}
+\begin{columen}[5]
 \begin{itemize}
   \item Alpha
   \item Beta
@@ -264,11 +264,11 @@ They may be copied verbatim into a document after
   \item Iota
   \item Kappa
 \end{itemize}
-\end{columnspread}
-\end{columnspreaddemo}
+\end{columen}
+\end{columendemo}
 
 \begin{verbatim}
-\begin{columnspread}[5]
+\begin{columen}[5]
 \begin{itemize}
   \item Odin Allfather
   \item Thor Thunderer
@@ -281,11 +281,11 @@ They may be copied verbatim into a document after
   \item Skadi Winter Huntress
   \item Hel Ruler of the Dead
 \end{itemize}
-\end{columnspread}
+\end{columen}
 \end{verbatim}
 
-\begin{columnspreaddemo}
-\begin{columnspread}[5]
+\begin{columendemo}
+\begin{columen}[5]
 \begin{itemize}
   \item Odin Allfather
   \item Thor Thunderer
@@ -298,15 +298,15 @@ They may be copied verbatim into a document after
   \item Skadi Winter Huntress
   \item Hel Ruler of the Dead
 \end{itemize}
-\end{columnspread}
-\end{columnspreaddemo}
+\end{columen}
+\end{columendemo}
 
 \subsection{Enumerate}
 Replace the \env{itemize} environment with \env{enumerate} to balance numbered
 lists.  The column adjustment works the same as in the previous example.
 
 \begin{verbatim}
-\begin{columnspread}[5]
+\begin{columen}[5]
 \begin{enumerate}
   \item Alpha
   \item Beta
@@ -319,11 +319,11 @@ lists.  The column adjustment works the same as in the previous example.
   \item Iota
   \item Kappa
 \end{enumerate}
-\end{columnspread}
+\end{columen}
 \end{verbatim}
 
-\begin{columnspreaddemo}
-\begin{columnspread}[5]
+\begin{columendemo}
+\begin{columen}[5]
 \begin{enumerate}
   \item Alpha
   \item Beta
@@ -336,11 +336,11 @@ lists.  The column adjustment works the same as in the previous example.
   \item Iota
   \item Kappa
 \end{enumerate}
-\end{columnspread}
-\end{columnspreaddemo}
+\end{columen}
+\end{columendemo}
 
 \begin{verbatim}
-\begin{columnspread}[5]
+\begin{columen}[5]
 \begin{enumerate}
   \item Odin Allfather
   \item Thor Thunderer
@@ -353,11 +353,11 @@ lists.  The column adjustment works the same as in the previous example.
   \item Skadi Winter Huntress
   \item Hel Ruler of the Dead
 \end{enumerate}
-\end{columnspread}
+\end{columen}
 \end{verbatim}
 
-\begin{columnspreaddemo}
-\begin{columnspread}[5]
+\begin{columendemo}
+\begin{columen}[5]
 \begin{enumerate}
   \item Odin Allfather
   \item Thor Thunderer
@@ -370,15 +370,15 @@ lists.  The column adjustment works the same as in the previous example.
   \item Skadi Winter Huntress
   \item Hel Ruler of the Dead
 \end{enumerate}
-\end{columnspread}
-\end{columnspreaddemo}
+\end{columen}
+\end{columendemo}
 
 \subsection{Descriptions}
 
 Description lists are also supported:
 
 \begin{verbatim}
-\begin{columnspread}[3]
+\begin{columen}[3]
 \begin{description}
   \item[Apple] A sweet red fruit.
   \item[Banana] A long yellow fruit.
@@ -389,10 +389,10 @@ Description lists are also supported:
   \item[Grape] A small round fruit.
   \item[Honeydew] A sweet green melon.
 \end{description}
-\end{columnspread}
+\end{columen}
 \end{verbatim}
-\begin{columnspreaddemo}
-\begin{columnspread}[3]
+\begin{columendemo}
+\begin{columen}[3]
 \begin{description}
   \item[Apple] A sweet red fruit.
   \item[Banana] A long yellow fruit.
@@ -403,21 +403,21 @@ Description lists are also supported:
   \item[Grape] A small round fruit.
   \item[Honeydew] A sweet green melon.
 \end{description}
-\end{columnspread}
-\end{columnspreaddemo}
+\end{columen}
+\end{columendemo}
 
 Obviously, longer descriptions may trigger column breaks and therefore the case to have no columns at all may arise:
 
 \begin{verbatim}
-\begin{columnspread}[3]
+\begin{columen}[3]
 \begin{description}
   \item[Linus Torvalds] ...
   \item[Dennis Ritchie] ...
 \end{description}
-\end{columnspread}
+\end{columen}
 \end{verbatim}
-\begin{columnspreaddemo}
-\begin{columnspread}[3]
+\begin{columendemo}
+\begin{columen}[3]
 \begin{description}
   \item[Linus Torvalds] Torvalds was born in Helsinki, Finland, on 28 December 1969,
   the son of journalists Anna and Nils Torvalds, the grandson of statistician Leo Törnqvist and of poet Ole Torvalds,
@@ -432,14 +432,14 @@ Obviously, longer descriptions may trigger column breaks and therefore the case 
   As a child, Dennis moved with his family to Summit, New Jersey, where he graduated from Summit High School.
   He graduated from Harvard University with degrees in physics and applied mathematics in 1963.
 \end{description}
-\end{columnspread}
-\end{columnspreaddemo}
+\end{columen}
+\end{columendemo}
 
 \subsection{Exam checkboxes}
 \begin{verbatim}
 \begin{questions}
 \question Which animal is known as the ``King of the Jungle''?
-\begin{columnspread}[5]
+\begin{columen}[5]
 \begin{checkboxes}
   \CorrectChoice Lion
   \choice Tiger
@@ -452,13 +452,13 @@ Obviously, longer descriptions may trigger column breaks and therefore the case 
   \choice Leopard
   \choice Rhino
 \end{checkboxes}
-\end{columnspread}
+\end{columen}
 \end{questions}
 \end{verbatim}
-\begin{columnspreaddemo}
+\begin{columendemo}
 \begin{questions}
 \question Which animal is known as the ``King of the Jungle''?
-\begin{columnspread}[5]
+\begin{columen}[5]
 \begin{checkboxes}
   \CorrectChoice Lion
   \choice Tiger
@@ -471,12 +471,12 @@ Obviously, longer descriptions may trigger column breaks and therefore the case 
   \choice Leopard
   \choice Rhino
 \end{checkboxes}
-\end{columnspread}
+\end{columen}
 \end{questions}
-\end{columnspreaddemo}
+\end{columendemo}
 \subsection{Shared keys}
 \begin{verbatim}
-\begin{columnspread}[4][Q1]
+\begin{columen}[4][Q1]
 \begin{choices}
   \choice Mercury
   \choice Venus
@@ -493,10 +493,10 @@ Obviously, longer descriptions may trigger column breaks and therefore the case 
   \choice Eris
   \choice Ceres
 \end{choices}
-\end{columnspread}
+\end{columen}
 \end{verbatim}
-\begin{columnspreaddemo}
-\begin{columnspread}[5][Q1]
+\begin{columendemo}
+\begin{columen}[5][Q1]
 \begin{choices}
   \choice Mercury
   \choice Venus
@@ -513,26 +513,26 @@ Obviously, longer descriptions may trigger column breaks and therefore the case 
   \choice Eris
   \choice Ceres
 \end{choices}
-\end{columnspread}
-\end{columnspreaddemo}
+\end{columen}
+\end{columendemo}
 
 Warning demo (optional for end users)
 \begin{verbatim}
-\begin{columnspread}[2]
+\begin{columen}[2]
 \begin{itemize}
   \item This item wraps a figure float to trigger the warning.
     \begin{figure}[h]
       \centering
       \rule{2cm}{2cm}
-      \caption{Float inside columnspread (demo)}
+      \caption{Float inside columen (demo)}
     \end{figure}
 \end{itemize}
-\end{columnspread}
+\end{columen}
 \end{verbatim}
 
 \subsection{TcolorBox integration}
 \begin{verbatim}
-\begin{columnspread}[5]
+\begin{columen}[5]
 \begin{tcbitemize}[size=fbox]
   \tcbitem Argentina
   \tcbitem Brazil
@@ -542,10 +542,10 @@ Warning demo (optional for end users)
   \tcbitem France
   \tcbitem The People's Democratic Republic of Algeria
 \end{tcbitemize}
-\end{columnspread}
+\end{columen}
 \end{verbatim}
-\begin{columnspreaddemo}
-\begin{columnspread}[5]
+\begin{columendemo}
+\begin{columen}[5]
 \begin{tcbitemize}[size=fbox]
   \tcbitem Argentina
   \tcbitem Brazil
@@ -555,8 +555,8 @@ Warning demo (optional for end users)
   \tcbitem France
   \tcbitem The People's Democratic Republic of Algeria
 \end{tcbitemize}
-\end{columnspread}
-\end{columnspreaddemo}
+\end{columen}
+\end{columendemo}
 \StopEventually{\PrintChanges\PrintIndex}
 
 \clearpage
@@ -564,26 +564,26 @@ Warning demo (optional for end users)
 \section{Implementation}
 The implementation closely follows the exploratory code that powered the
 original demo document.
-  \DocInput{columnspread.dtx}
+  \DocInput{columen.dtx}
 \end{document}
 %</driver>
 % \fi
 %<*package>
 %    \begin{macrocode}
 \NeedsTeXFormat{LaTeX2e}[2020-10-01]
-\ProvidesPackage{columnspread}[2024/06/13 v0.1 Automatically balance list columns]
+\ProvidesPackage{columen}[2024/06/13 v0.1 Automatically balance list columns]
 \RequirePackage{xparse}
 \RequirePackage{multicol}
 \RequirePackage{etoolbox}
 
-\newcommand\columnspread@pendingpreset{}
-\DeclareOption{defaults=exam}{\gdef\columnspread@pendingpreset{exam}}
+\newcommand\columen@pendingpreset{}
+\DeclareOption{defaults=exam}{\gdef\columen@pendingpreset{exam}}
 \DeclareOption*{%
-  \PackageWarning{columnspread}{Unknown option '\CurrentOption'}%
+  \PackageWarning{columen}{Unknown option '\CurrentOption'}%
 }
 \ProcessOptions\relax
 
-\@namedef{columnspread@preset@exam}{itemize,enumerate,description,choices,checkboxes,oneparchoices,oneparcheckboxes,parts,subparts}
+\@namedef{columen@preset@exam}{itemize,enumerate,description,choices,checkboxes,oneparchoices,oneparcheckboxes,parts,subparts}
 
 \makeatletter
 
@@ -603,18 +603,18 @@ original demo document.
 
 \newcommand\WI@defaultmaxcols{5}
 
-\newif\ifWI@columnspread
-\newif\ifWI@columnspreadstar
-\newif\ifWI@columnspreadhaskey
-\newcount\WI@columnspreaddepth
-\newcount\WI@columnspreadlistcount
-\WI@columnspreadfalse
-\WI@columnspreadstarfalse
-\WI@columnspreadhaskeyfalse
-\WI@columnspreaddepth=0\relax
-\WI@columnspreadlistcount=0\relax
-\newcommand\WI@columnspreadcols{\WI@defaultmaxcols}
-\newcommand\WI@columnspreadkey{}
+\newif\ifWI@columen
+\newif\ifWI@columenstar
+\newif\ifWI@columenhaskey
+\newcount\WI@columendepth
+\newcount\WI@columenlistcount
+\WI@columenfalse
+\WI@columenstarfalse
+\WI@columenhaskeyfalse
+\WI@columendepth=0\relax
+\WI@columenlistcount=0\relax
+\newcommand\WI@columencols{\WI@defaultmaxcols}
+\newcommand\WI@columenkey{}
 
 \newif\ifWI@usetcbitemize
 \newif\ifWI@hadtcbcolumns
@@ -669,14 +669,14 @@ original demo document.
 \newcommand\WI@maybeWarn@[1]{%
   \ifnum#1>1
     \global\WI@broketrue
-    \PackageWarning{columnspread}{A list item broke across #1 lines}%
+    \PackageWarning{columen}{A list item broke across #1 lines}%
   \fi
   \WI@pendingfalse
 }
 
 \newcommand\WI@floatwarn[1]{%
   \ifWI@active
-    \PackageWarning{columnspread}{Floating environments inside columnspread items are unsupported; move the float outside}%
+    \PackageWarning{columen}{Floating environments inside columen items are unsupported; move the float outside}%
   \fi
 }
 \pretocmd{\@float}{\WI@floatwarn{#1}}{}{}
@@ -701,7 +701,7 @@ original demo document.
 
 \AtEndDocument{%
   \ifWI@rerun
-    \PackageWarningNoLine{columnspread}{List columns expanded; rerun LaTeX}%
+    \PackageWarningNoLine{columen}{List columns expanded; rerun LaTeX}%
   \fi
 }
 
@@ -794,121 +794,121 @@ original demo document.
     \global\WI@activefalse
 }
 
-\newcommand\WI@columnspread@begin[2]{%
-  \ifWI@columnspread
-    \PackageError{columnspread}{Nested columnspread environments are unsupported}{%
-      Close the surrounding columnspread environment before starting another.%
+\newcommand\WI@columen@begin[2]{%
+  \ifWI@columen
+    \PackageError{columen}{Nested columen environments are unsupported}{%
+      Close the surrounding columen environment before starting another.%
     }%
   \fi
-  \WI@columnspreadtrue
-  \WI@columnspreaddepth=0\relax
-  \WI@columnspreadlistcount=0\relax
-  \def\WI@columnspreadcols{#1}%
+  \WI@columentrue
+  \WI@columendepth=0\relax
+  \WI@columenlistcount=0\relax
+  \def\WI@columencols{#1}%
   \IfNoValueTF{#2}{%
-    \WI@columnspreadhaskeyfalse
+    \WI@columenhaskeyfalse
   }{%
-    \WI@columnspreadhaskeytrue
-    \def\WI@columnspreadkey{#2}%
+    \WI@columenhaskeytrue
+    \def\WI@columenkey{#2}%
   }%
 }
 
-\newcommand\WI@columnspread@end{%
-  \ifWI@columnspread
-    \ifnum\WI@columnspreaddepth>0\relax
+\newcommand\WI@columen@end{%
+  \ifWI@columen
+    \ifnum\WI@columendepth>0\relax
       \WI@endcolumns
     \fi
-    \WI@columnspreadfalse
-    \WI@columnspreadstarfalse
-    \WI@columnspreadhaskeyfalse
-    \WI@columnspreaddepth=0\relax
-    \WI@columnspreadlistcount=0\relax
+    \WI@columenfalse
+    \WI@columenstarfalse
+    \WI@columenhaskeyfalse
+    \WI@columendepth=0\relax
+    \WI@columenlistcount=0\relax
   \fi
 }
 
-\newcommand\WI@columnspread@before{%
-  \ifWI@columnspread
-    \advance\WI@columnspreaddepth\@ne
-    \ifnum\WI@columnspreaddepth=\@ne
-      \advance\WI@columnspreadlistcount\@ne
-      \ifWI@columnspreadhaskey
-        \protected@edef\WI@currentkey{\WI@columnspreadkey-\the\WI@columnspreadlistcount}%
+\newcommand\WI@columen@before{%
+  \ifWI@columen
+    \advance\WI@columendepth\@ne
+    \ifnum\WI@columendepth=\@ne
+      \advance\WI@columenlistcount\@ne
+      \ifWI@columenhaskey
+        \protected@edef\WI@currentkey{\WI@columenkey-\the\WI@columenlistcount}%
       \else
         \WI@generatekey
       \fi
-      \ifWI@columnspreadstar
+      \ifWI@columenstar
         \WI@startrue
       \else
         \WI@starfalse
       \fi
-      \WI@startcolumns{\WI@columnspreadcols}%
+      \WI@startcolumns{\WI@columencols}%
     \fi
   \fi
 }
 
-\newcommand\WI@columnspread@after{%
-  \ifWI@columnspread
-    \ifnum\WI@columnspreaddepth>0\relax
-      \ifnum\WI@columnspreaddepth=\@ne
+\newcommand\WI@columen@after{%
+  \ifWI@columen
+    \ifnum\WI@columendepth>0\relax
+      \ifnum\WI@columendepth=\@ne
         \WI@endcolumns
       \fi
-      \advance\WI@columnspreaddepth\m@ne
+      \advance\WI@columendepth\m@ne
     \fi
   \fi
 }
 
-\newcommand\WI@columnspread@patch[1]{%
-  \BeforeBeginEnvironment{#1}{\WI@columnspread@before}%
-  \AfterEndEnvironment{#1}{\WI@columnspread@after}%
+\newcommand\WI@columen@patch[1]{%
+  \BeforeBeginEnvironment{#1}{\WI@columen@before}%
+  \AfterEndEnvironment{#1}{\WI@columen@after}%
 }
 
-\newcommand\WI@columnspread@maybe[1]{%
+\newcommand\WI@columen@maybe[1]{%
   \@ifundefined{#1}{}{%
-    \WI@columnspread@patch{#1}%
+    \WI@columen@patch{#1}%
   }%
 }
 
-\NewDocumentCommand{\ColumnSpreadPatch}{m}{%
-  \WI@columnspread@patch{#1}%
+\NewDocumentCommand{\ColumenPatch}{m}{%
+  \WI@columen@patch{#1}%
 }
 
-\NewDocumentCommand{\columnspreadfor}{m}{%
-  \forcsvlist{\WI@columnspread@maybe}{#1}%
+\NewDocumentCommand{\columenfor}{m}{%
+  \forcsvlist{\WI@columen@maybe}{#1}%
 }
 
-\newcommand\columnspread@applypreset[1]{%
-  \edef\columnspread@optiondefaults{#1}%
-  \@ifundefined{columnspread@preset@\columnspread@optiondefaults}{%
-    \PackageWarning{columnspread}{Unknown defaults preset '#1'; ignoring}%
+\newcommand\columen@applypreset[1]{%
+  \edef\columen@optiondefaults{#1}%
+  \@ifundefined{columen@preset@\columen@optiondefaults}{%
+    \PackageWarning{columen}{Unknown defaults preset '#1'; ignoring}%
   }{%
-    \columnspreadfor{\csname columnspread@preset@\columnspread@optiondefaults\endcsname}%
+    \columenfor{\csname columen@preset@\columen@optiondefaults\endcsname}%
   }%
 }
 
 \AtBeginDocument{%
-  \ifx\columnspread@pendingpreset\@empty
+  \ifx\columen@pendingpreset\@empty
   \else
-    \columnspread@applypreset{\columnspread@pendingpreset}%
+    \columen@applypreset{\columen@pendingpreset}%
   \fi
 }
 
-\NewDocumentEnvironment{columnspread}{O{\WI@defaultmaxcols} o}
+\NewDocumentEnvironment{columen}{O{\WI@defaultmaxcols} o}
   {%
-    \WI@columnspreadstarfalse
-    \WI@columnspread@begin{#1}{#2}%
+    \WI@columenstarfalse
+    \WI@columen@begin{#1}{#2}%
   }
-  {\WI@columnspread@end}
+  {\WI@columen@end}
 
-\NewDocumentEnvironment{columnspread*}{O{\WI@defaultmaxcols} o}
+\NewDocumentEnvironment{columen*}{O{\WI@defaultmaxcols} o}
   {%
-    \WI@columnspreadstartrue
-    \WI@columnspread@begin{#1}{#2}%
+    \WI@columenstartrue
+    \WI@columen@begin{#1}{#2}%
   }
-  {\WI@columnspread@end}
+  {\WI@columen@end}
 
-\WI@columnspread@maybe{itemize}
-\WI@columnspread@maybe{enumerate}
-\WI@columnspread@maybe{checkboxes}
-\WI@columnspread@maybe{description}
+\WI@columen@maybe{itemize}
+\WI@columen@maybe{enumerate}
+\WI@columen@maybe{checkboxes}
+\WI@columen@maybe{description}
 
 \newcommand\WI@tcbitem@prepare{%
   \ifWI@usetcbitemize
@@ -950,11 +950,11 @@ original demo document.
   \fi
 }
 
-\newcommand\columnspread@setuptcb{%
+\newcommand\columen@setuptcb{%
   \BeforeBeginEnvironment{tcbitemize}{%
-    \ifWI@columnspread
+    \ifWI@columen
       \WI@usetcbitemizetrue
-      \WI@columnspread@before
+      \WI@columen@before
       \WI@tcbitemfirsttrue
       \WI@tcb@baseline=0pt
     \else
@@ -964,7 +964,7 @@ original demo document.
   \AfterEndEnvironment{tcbitemize}{%
     \ifWI@usetcbitemize
       \WI@tcbitem@finalize
-      \WI@columnspread@after
+      \WI@columen@after
       \WI@usetcbitemizefalse
     \fi
   }%
@@ -982,9 +982,9 @@ original demo document.
 }
 
 \@ifundefined{tcbitemize}{%
-  \AtBeginDocument{\@ifpackageloaded{tcolorbox}{\columnspread@setuptcb}{}}%
+  \AtBeginDocument{\@ifpackageloaded{tcolorbox}{\columen@setuptcb}{}}%
 }{%
-  \columnspread@setuptcb
+  \columen@setuptcb
 }
 
 \makeatother

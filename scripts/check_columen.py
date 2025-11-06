@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Offline regression test for the columnspread demo document.
+"""Offline regression test for the columen demo document.
 
 Usage:
-    python3 scripts/check_columnspread.py
+    python3 scripts/check_columen.py
 
 The script recompiles ``test.tex`` repeatedly so the aux-driven column
 allocation logic converges, then inspects ``test.aux`` to confirm the computed
@@ -22,8 +22,8 @@ from typing import Iterable
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 TEX_FILE = ROOT / "test.tex"
-STY_FILE = ROOT / "columnspread.sty"
-INS_FILE = ROOT / "columnspread.ins"
+STY_FILE = ROOT / "columen.sty"
+INS_FILE = ROOT / "columen.ins"
 EXPECTED_COLUMNS = [5, 3, 5, 3, 5, 3, 2]
 EXAM_PRESET_ENVIRONMENTS = [
     "itemize",
@@ -69,11 +69,11 @@ def read_columns(aux_path: pathlib.Path) -> list[int]:
 
 
 def ensure_style_file() -> None:
-    """Ensure columnspread.sty exists by running docstrip if needed."""
+    """Ensure columen.sty exists by running docstrip if needed."""
     if STY_FILE.exists():
         return
     if not INS_FILE.exists():
-        raise RuntimeError("Missing columnspread.ins; cannot generate columnspread.sty")
+        raise RuntimeError("Missing columen.ins; cannot generate columen.sty")
     subprocess.run(
         ["pdflatex", INS_FILE.name],
         cwd=ROOT,
@@ -84,11 +84,11 @@ def ensure_style_file() -> None:
 
 
 def parse_preset_csv(name: str) -> list[str]:
-    """Extract the CSV registered via \\@namedef{columnspread@preset@<name>}."""
+    """Extract the CSV registered via \\@namedef{columen@preset@<name>}."""
     ensure_style_file()
     sty_source = STY_FILE.read_text(encoding="utf8")
     pattern = re.compile(
-        rf"\\@namedef\{{columnspread@preset@{re.escape(name)}\}}\{{([^}}]*)\}}"
+        rf"\\@namedef\{{columen@preset@{re.escape(name)}\}}\{{([^}}]*)\}}"
     )
     match = pattern.search(sty_source)
     if not match:

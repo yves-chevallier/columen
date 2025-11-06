@@ -1,10 +1,10 @@
-module = "columnspread"
+module = "columen"
 
-sourcefiles  = {"columnspread.dtx","columnspread.ins"}
-installfiles = {"columnspread.sty"}
-typesetfiles = {"columnspread.dtx"}
-typesetsuppfiles = {"columnspread.sty"}
-tagfiles     = {"columnspread.dtx"} -- for versioning
+sourcefiles  = {"columen.dtx","columen.ins"}
+installfiles = {"columen.sty"}
+typesetfiles = {"columen.dtx"}
+typesetsuppfiles = {"columen.sty"}
+tagfiles     = {"columen.dtx"} -- for versioning
 
 checkengines = {"pdftex","xetex","luatex"}
 typesetexe   = "pdflatex"

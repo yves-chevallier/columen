@@ -1,18 +1,25 @@
-# Column Spread LaTeX Package
+# Columen LaTeX Package
 
-This package provides the `columnspread` environment, which allows you to
-distribute content across multiple columns while ensuring that items are not
+Columen provides the `columen` environment, which distributes list-like
+content across multiple columns while ensuring that individual items are not
 split between columns.
+
+## Build Demo Document
+
+```bash
+l3build unpack
+latexmk -pdf test.tex
+```
 
 ## Install
 
 ```bash
 l3build unpack
-latexmk -pdf columnspread.dtx
+latexmk -pdf columen.dtx
 ```
 
 Or manually:
 
 ```bash
-tex columnspread.ins && latexmk -pdf columnspread.dtx
+tex columen.ins && latexmk -pdf columen.dtx
 ```
