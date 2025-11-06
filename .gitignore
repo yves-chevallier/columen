@@ -14,3 +14,9 @@
 test.pdf
 build/
 *.pdf
+*.glo
+*.hd
+*.idx
+*.ilg
+*.ind
+*.sty
