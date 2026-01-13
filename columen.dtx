@@ -666,6 +666,38 @@ original demo document.
 \newif\ifWI@active
 \WI@activefalse
 
+\newcount\WI@save@beginparpenalty
+\newcount\WI@save@itempenalty
+\newcount\WI@save@endparpenalty
+\newif\ifWI@restorepenalties
+\WI@restorepenaltiesfalse
+
+\newcommand\WI@maybeRelaxSamepagePenalties{%
+  \WI@restorepenaltiesfalse
+  \ifnum\@beginparpenalty=\@M
+    \ifnum\@itempenalty=\@M
+      \ifnum\@endparpenalty=\@M
+        \WI@save@beginparpenalty=\@beginparpenalty
+        \WI@save@itempenalty=\@itempenalty
+        \WI@save@endparpenalty=\@endparpenalty
+        \@beginparpenalty=0\relax
+        \@itempenalty=0\relax
+        \@endparpenalty=0\relax
+        \WI@restorepenaltiestrue
+      \fi
+    \fi
+  \fi
+}
+
+\newcommand\WI@restoreSamepagePenalties{%
+  \ifWI@restorepenalties
+    \@beginparpenalty=\WI@save@beginparpenalty
+    \@itempenalty=\WI@save@itempenalty
+    \@endparpenalty=\WI@save@endparpenalty
+    \WI@restorepenaltiesfalse
+  \fi
+}
+
 \newcommand\WI@maybeWarn@[1]{%
   \ifnum#1>1
     \global\WI@broketrue
@@ -740,6 +772,7 @@ original demo document.
       \WI@usemulticolsfalse
     \fi
     \ifWI@usemulticols
+      \WI@maybeRelaxSamepagePenalties
       \ifWI@star
         \begin{multicols*}{\the\WI@columncount}%
       \else
@@ -756,6 +789,7 @@ original demo document.
       \else
         \end{multicols}%
       \fi
+      \WI@restoreSamepagePenalties
     \fi
     \ifWI@star
       % starred variant is manual; keep requested column count
